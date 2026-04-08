@@ -1,0 +1,5 @@
+flask>=3.0,<4
+flask-sqlalchemy>=3.1,<4
+flask-limiter>=3.5,<4
+openai>=1.30,<2
+duckduckgo-search>=6.0,<7

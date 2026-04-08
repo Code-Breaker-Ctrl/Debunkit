@@ -1,183 +1,196 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
-from PIL import ImageTk, Image  
-from transformers import pipeline
-import threading
+"""
+Debunkit – Flask web application.
+
+Endpoints
+---------
+GET  /                   Serve the single-page UI
+POST /api/analyse        Fact-check a claim
+GET  /api/history        List recent analyses
+GET  /api/stats          Aggregate statistics
+POST /api/clear-database Delete all stored analyses
+"""
+
+import json
+import logging
 import os
 
-class DebunkItApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("DebunkIt - Full Analysis Viewer")
-        self.root.state('zoomed')  
-        self.root.configure(bg="#f5f7fa")
-        
-        self.text_font = ("Segoe UI", 12)
-        self.analysis_font = ("Segoe UI", 11)
-        self.max_char_width = 120 
-        
-        # Add these lines for logo and title
-        self.setup_header()
-        self.setup_ui()
-        self.load_model()
-    
-    def setup_header(self):
-        """Create the header with logo and title"""
-        header_frame = tk.Frame(self.root, bg="#4a6fa5")
-        header_frame.pack(fill="x", padx=0, pady=0)
-        
+from flask import Flask, jsonify, render_template, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+from Core.database import Analysis, db
+
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__, template_folder="Template", static_folder="Static")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "sqlite:///debunkit.db"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "debunkit-dev-secret")
+
+db.init_app(app)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
+# Initialise AI engine once at startup
+from Core.ai_engine import AIEngine  # noqa: E402
+
+engine = AIEngine()
+
+# Create DB tables on first run
+with app.app_context():
+    db.create_all()
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/api/analyse", methods=["POST"])
+@limiter.limit("30 per minute")
+def analyse():
+    """Fact-check a claim, optionally searching the web for live sources."""
+    data = request.get_json(silent=True) or {}
+    text = (data.get("text") or "").strip()
+
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+
+    if len(text) > 5000:
+        return jsonify({"error": "Text too long (max 5000 characters)"}), 400
+
+    # Optionally fetch live web sources
+    sources: list[dict] = []
+    if data.get("use_web_sources", True):
         try:
-            logo_img = Image.open("logo.png")
-            logo_img = logo_img.resize((50, 50), Image.LANCZOS)
-            self.logo = ImageTk.PhotoImage(logo_img)
-            
-            logo_label = tk.Label(header_frame, image=self.logo, bg="#4a6fa5")
-            logo_label.pack(side="left", padx=(20, 10), pady=10)
-        except Exception as e:
-            print(f"Logo not found: {e}")
-            logo_label = tk.Label(header_frame, text="🧐", font=("Segoe UI", 24), bg="#4a6fa5", fg="white")
-            logo_label.pack(side="left", padx=(20, 10), pady=10)
+            from Core.web_sources import search_sources  # noqa: PLC0415
 
-        title_label = tk.Label(header_frame, 
-                             text="DebunkIt - Misinformation Detection Tool",
-                             font=("Segoe UI", 20, "bold"),
-                             bg="#4a6fa5",
-                             fg="white")
-        title_label.pack(side="left", pady=10)
-    
-    def setup_ui(self):
+            sources = search_sources(text, max_results=5)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Web source search failed: %s", exc)
 
-        main_frame = tk.Frame(self.root, bg="#f5f7fa")
-        main_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-        
-        # Input
-        input_frame = tk.LabelFrame(main_frame, 
-                                  text=" News Content Input ",
-                                  font=("Segoe UI", 14, "bold"),
-                                  bg="#ffffff",
-                                  padx=15,
-                                  pady=15)
-        input_frame.pack(fill="x", pady=(0, 20))
-        
-        self.text_input = scrolledtext.ScrolledText(input_frame,
-                                                  wrap=tk.WORD,
-                                                  font=self.text_font,
-                                                  width=self.max_char_width,
-                                                  height=10,
-                                                  padx=10,
-                                                  pady=10)
-        self.text_input.pack(fill="both", expand=True)
-        
-        # Button
-        analyze_btn = tk.Button(main_frame,
-                              text="Analyze Content",
-                              command=self.analyze,
-                              font=("Segoe UI", 12, "bold"),
-                              bg="#4a6fa5",
-                              fg="white",
-                              padx=20,
-                              pady=8)
-        analyze_btn.pack(pady=10)
-        
-        result_frame = tk.LabelFrame(main_frame,
-                                   text=" Detailed Analysis ",
-                                   font=("Segoe UI", 14, "bold"),
-                                   bg="#ffffff",
-                                   padx=15,
-                                   pady=15)
-        result_frame.pack(fill="both", expand=True)
-        
-        self.result_display = scrolledtext.ScrolledText(result_frame,
-                                                      wrap=tk.WORD,
-                                                      font=self.analysis_font,
-                                                      width=self.max_char_width,
-                                                      height=15,
-                                                      padx=10,
-                                                      pady=10,
-                                                      state='normal')
-        self.result_display.pack(fill="both", expand=True)        
-        self.result_display.insert(tk.END, 
-                                 "Analysis results will appear here with complete details...\n\n"
-                                 )
-        self.result_display.configure(state='disabled')
-        self.status_bar = tk.Label(self.root,
-                                 text="🔄 Loading AI detection model...",
-                                 font=("Segoe UI", 10),
-                                 bd=1,
-                                 relief="sunken",
-                                 anchor="w")
-        self.status_bar.pack(fill="x", side="bottom")
+    result = engine.analyse(text, sources=sources)
 
-    def load_model(self):
-        def _load():
-            try:
-                self.detector = pipeline(
-                    "text-classification",
-                    model="distilbert-base-uncased-finetuned-sst-2-english"
-                )
-                self.model_loaded = True
-                self.status_bar.config(text="✅ Model Ready | Scroll to view full analysis", fg="green")
-            except Exception as e:
-                messagebox.showerror("Error", f"Model loading failed:\n{e}")
-                self.status_bar.config(text="❌ Model Failed to Load", fg="red")
-        
-        threading.Thread(target=_load, daemon=True).start()
-    
-    def analyze(self):
-        if not hasattr(self, 'model_loaded') or not self.model_loaded:
-            messagebox.showwarning("Warning", "AI model is still loading. Please wait.")
-            return
-        
-        text = self.text_input.get("1.0", "end-1c").strip()
-        if not text:
-            messagebox.showwarning("Warning", "Please enter some text to analyze!")
-            return
-        
-        try:
-            result = self.detector(text)[0]
-            self.result_display.configure(state='normal')
-            self.result_display.delete("1.0", tk.END)
-            
-            if result['label'] == "NEGATIVE":
-                analysis = (
-                    "⚠️ POTENTIAL MISINFORMATION DETECTED\n\n"
-                    f"Confidence Level: {result['score']*100:.1f}%\n\n"
-                    "Detailed Analysis:\n"
-                    "• Emotionally charged language detected\n"
-                    "• Contains exaggerated or absolute claims\n"
-                    "• Lacks verifiable sources or references\n"
-                    "• Shows patterns consistent with known misinformation\n\n"
-                    "Recommendations:\n"
-                    "1. Cross-check claims with reliable fact-checking websites\n"
-                    "2. Look for primary sources or official statements\n"
-                    "3. Be cautious of emotional manipulation techniques"
-                )
-                self.result_display.tag_config("warning", foreground="red")
-                self.result_display.insert(tk.END, analysis, "warning")
-            else:
-                analysis = (
-                    "✅ CREDIBLE CONTENT\n\n"
-                    f"Confidence Level: {result['score']*100:.1f}%\n\n"
-                    "Detailed Analysis:\n"
-                    "• Neutral and factual tone detected\n"
-                    "• Claims appear reasonable and measured\n"
-                    "• Consistent with established knowledge\n"
-                    "• Shows characteristics of reliable information\n\n"
-                    "Recommendations:\n"
-                    "1. Still verify with primary sources when possible\n"
-                    "2. Check the date of publication for relevance\n"
-                    "3. Consider the author's credentials and reputation"
-                )
-                self.result_display.tag_config("safe", foreground="green")
-                self.result_display.insert(tk.END, analysis, "safe")
-            
-            self.result_display.configure(state='disabled')
-            self.status_bar.config(text="✔️ Analysis complete - Scroll to read full details")
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Analysis failed: {str(e)}")
+    # Persist the result
+    try:
+        record = Analysis(
+            text_analyzed=text,
+            verdict=result["verdict"],
+            confidence=result.get("confidence", 50),
+            summary=result.get("summary", ""),
+            red_flags=json.dumps(result.get("red_flags", [])),
+            source_analysis=result.get("source_analysis", ""),
+            domain=result.get("domain", "general"),
+            mode="ai" if engine._client is not None else "local",
+        )
+        db.session.add(record)
+        db.session.commit()
+        result["id"] = record.id
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to save analysis: %s", exc)
+        db.session.rollback()
+
+    result["sources_used"] = len(sources)
+    return jsonify(result), 200
+
+
+@app.route("/api/history")
+@limiter.limit("60 per minute")
+def history():
+    """Return the most recent analyses."""
+    try:
+        limit = min(int(request.args.get("limit", 20)), 100)
+    except (TypeError, ValueError):
+        limit = 20
+
+    records = (
+        Analysis.query.order_by(Analysis.timestamp.desc()).limit(limit).all()
+    )
+    return jsonify({"analyses": [r.to_dict() for r in records]}), 200
+
+
+@app.route("/api/stats")
+@limiter.limit("30 per minute")
+def stats():
+    """Return aggregate statistics."""
+    total = Analysis.query.count()
+    if total == 0:
+        return jsonify(
+            {
+                "total_analyses": 0,
+                "average_confidence": 0,
+                "verdict_breakdown": {},
+                "mode_breakdown": {},
+            }
+        )
+
+    from sqlalchemy import func  # noqa: PLC0415
+
+    avg_conf = db.session.query(func.avg(Analysis.confidence)).scalar() or 0
+
+    verdict_rows = (
+        db.session.query(Analysis.verdict, func.count(Analysis.id))
+        .group_by(Analysis.verdict)
+        .all()
+    )
+    mode_rows = (
+        db.session.query(Analysis.mode, func.count(Analysis.id))
+        .group_by(Analysis.mode)
+        .all()
+    )
+
+    return jsonify(
+        {
+            "total_analyses": total,
+            "average_confidence": round(avg_conf, 1),
+            "verdict_breakdown": {v: c for v, c in verdict_rows},
+            "mode_breakdown": {m: c for m, c in mode_rows},
+        }
+    )
+
+
+@app.route("/api/clear-database", methods=["POST"])
+@limiter.limit("5 per minute")
+def clear_database():
+    """Delete all stored analyses."""
+    try:
+        count = Analysis.query.count()
+        Analysis.query.delete()
+        db.session.commit()
+        logger.warning("Database cleared: %d analyses deleted.", count)
+        return jsonify({"status": "success", "deleted": count}), 200
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Error clearing database: %s", exc)
+        db.session.rollback()
+        return jsonify({"error": "Failed to clear database"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Entry-point
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = DebunkItApp(root)
-    root.mainloop()
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)

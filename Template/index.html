@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debunkit – AI Fact Checker</title>
+  <link rel="stylesheet" href="/Static/CSS/style.css" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <span class="logo-icon">🧐</span>
+    <h1 class="app-title">Debunkit</h1>
+    <p class="app-subtitle">AI-Powered Fact Checker</p>
+  </header>
+
+  <!-- ===== NAV ===== -->
+  <nav class="app-nav">
+    <button class="nav-btn active" data-view="view-analyse">🔍 Analyse</button>
+    <button class="nav-btn" data-view="view-history">📋 History</button>
+    <button class="nav-btn" data-view="view-analytics">📊 Analytics</button>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main class="app-main">
+
+    <!-- ANALYSE VIEW -->
+    <section id="view-analyse" class="view-section active">
+      <h2 class="view-title">Fact-Check a Claim</h2>
+
+      <div class="glass-panel">
+        <label for="claim-input" class="field-label">Enter a news claim or headline:</label>
+        <textarea id="claim-input" class="claim-input"
+                  placeholder="e.g. India won the T20 World Cup 2024 by defeating South Africa…"
+                  rows="5"></textarea>
+
+        <div class="option-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="use-web-sources" checked />
+            Search live web sources
+          </label>
+          <span class="char-counter" id="char-counter">0 / 5000</span>
+        </div>
+
+        <button class="btn-primary" id="analyse-btn" onclick="runAnalysis()">
+          🔍 Analyse Claim
+        </button>
+      </div>
+
+      <!-- RESULT CARD (hidden until analysis runs) -->
+      <div id="result-card" class="result-card hidden">
+        <div class="result-header">
+          <span id="result-verdict-badge" class="verdict-badge">—</span>
+          <span id="result-confidence" class="confidence-label">—</span>
+        </div>
+        <p id="result-summary" class="result-summary"></p>
+
+        <div class="result-details">
+          <div class="detail-block">
+            <h4>🌐 Source Analysis</h4>
+            <p id="result-sources"></p>
+          </div>
+          <div class="detail-block" id="red-flags-block">
+            <h4>🚩 Red Flags</h4>
+            <ul id="result-red-flags"></ul>
+          </div>
+          <div class="detail-block">
+            <h4>🏷️ Domain</h4>
+            <p id="result-domain"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPINNER -->
+      <div id="spinner" class="spinner hidden">
+        <div class="spinner-ring"></div>
+        <p>Analysing claim…</p>
+      </div>
+
+      <!-- ERROR -->
+      <div id="analyse-error" class="error-msg hidden"></div>
+    </section>
+
+    <!-- HISTORY VIEW -->
+    <section id="view-history" class="view-section">
+      <h2 class="view-title">Database Ledger</h2>
+
+      <div class="glass-panel">
+        <div class="toolbar">
+          <button class="btn-danger" onclick="clearAllAnalyses()">🗑️ Clear Database</button>
+          <button class="btn-secondary" onclick="loadAnalysisHistory()">🔄 Refresh</button>
+        </div>
+        <div id="history-content">Loading analysis history…</div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS VIEW -->
+    <section id="view-analytics" class="view-section">
+      <h2 class="view-title">Engine Telemetry</h2>
+
+      <div class="glass-panel">
+        <div id="analytics-content">Loading system analytics…</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/Static/JS/main.js"></script>
+</body>
+</html>
