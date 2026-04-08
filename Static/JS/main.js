@@ -176,12 +176,33 @@ async function loadAnalysisHistory() {
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
             tr.addEventListener('click', () => showAnalysisDetail(analysis));
-            tr.innerHTML = `
-                <td>${escapeHtml(snippet)}</td>
-                <td><span class="verdict-pill pill-${analysis.verdict}">${analysis.verdict}</span></td>
-                <td>${analysis.confidence}%</td>
-                <td>${analysis.domain || '—'}</td>
-                <td style="color:var(--muted);font-size:0.85rem">${date}</td>`;
+
+            // Build cells with textContent to avoid XSS
+            const tdText = document.createElement('td');
+            tdText.textContent = snippet;
+
+            const verdict  = String(analysis.verdict  || 'UNCERTAIN');
+            const domain   = String(analysis.domain   || '—');
+            const confText = `${analysis.confidence}%`;
+
+            const pill = document.createElement('span');
+            pill.className = `verdict-pill pill-${verdict}`;
+            pill.textContent = verdict;
+            const tdVerdict = document.createElement('td');
+            tdVerdict.appendChild(pill);
+
+            const tdConf = document.createElement('td');
+            tdConf.textContent = confText;
+
+            const tdDomain = document.createElement('td');
+            tdDomain.textContent = domain;
+
+            const tdDate = document.createElement('td');
+            tdDate.textContent = date;
+            tdDate.style.color = 'var(--muted)';
+            tdDate.style.fontSize = '0.85rem';
+
+            tr.append(tdText, tdVerdict, tdConf, tdDomain, tdDate);
             tbody.appendChild(tr);
         });
 
