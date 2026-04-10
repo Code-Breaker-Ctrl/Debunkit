@@ -146,12 +146,12 @@ def login():
         if user and user.check_password(password):
             login_user(user, remember=remember)
             next_page = request.args.get("next", "")
-            # Guard against open-redirect: only allow relative paths on the same host
-            parsed = urlparse(next_page)
-            if next_page and (parsed.netloc or parsed.scheme):
-                next_page = ""
+            # Guard against open-redirect: only accept simple relative paths
+            # (must start with '/' and not contain '//','\\', or a scheme)
+            if not next_page or not next_page.startswith("/") or next_page.startswith("//") or "\\" in next_page:
+                next_page = url_for("index")
             flash(f"Welcome back, {user.username}!", "success")
-            return redirect(next_page or url_for("index"))
+            return redirect(next_page)
 
         flash("Invalid credentials. Please try again.", "danger")
         return render_template("login.html", identifier=identifier)
