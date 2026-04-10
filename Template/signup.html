@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Sign Up – Debunk.IT{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="brand-icon">🔍</span>
+      <h1>Debunk<span class="brand-accent">.IT</span></h1>
+      <p class="auth-tagline">Create your free account</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('signup') }}" class="auth-form" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          class="form-input"
+          value="{{ username|default('') }}"
+          placeholder="Choose a username"
+          autocomplete="username"
+          minlength="3"
+          pattern="[A-Za-z0-9_]+"
+          required
+        />
+        <small class="form-hint">Letters, numbers and underscores only.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-input"
+          value="{{ email|default('') }}"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div class="input-wrap">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-input"
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" class="toggle-pw" onclick="togglePassword('password')" aria-label="Show password">👁</button>
+        </div>
+        <small class="form-hint">Min 8 characters, one uppercase letter, one number.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password" class="form-label">Confirm Password</label>
+        <div class="input-wrap">
+          <input
+            type="password"
+            id="confirm_password"
+            name="confirm_password"
+            class="form-input"
+            placeholder="Repeat your password"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" class="toggle-pw" onclick="togglePassword('confirm_password')" aria-label="Show password">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a href="{{ url_for('login') }}">Sign in →</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

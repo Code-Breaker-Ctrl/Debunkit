@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Debunk.IT{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body class="theme-{{ current_user.theme_preference if current_user.is_authenticated else 'dark' }}">
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}" class="navbar-brand">
+      <span class="brand-icon">🔍</span>
+      <span class="brand-name">Debunk<span class="brand-accent">.IT</span></span>
+    </a>
+
+    {% if current_user.is_authenticated %}
+    <div class="navbar-right">
+      <!-- User avatar dropdown -->
+      <div class="user-menu" id="userMenu">
+        <button class="avatar-btn" onclick="toggleUserMenu()" aria-label="User menu">
+          <span class="avatar-initials">{{ current_user.username[:2]|upper }}</span>
+          <span class="avatar-name">{{ current_user.username }}</span>
+          <span class="dropdown-arrow">▾</span>
+        </button>
+        <div class="dropdown" id="userDropdown">
+          <a href="{{ url_for('profile') }}" class="dropdown-item">
+            <span class="di-icon">👤</span> Profile
+          </a>
+          <a href="{{ url_for('settings') }}" class="dropdown-item">
+            <span class="di-icon">⚙️</span> Settings
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="{{ url_for('logout') }}" class="dropdown-item dropdown-item-danger">
+            <span class="di-icon">🚪</span> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="navbar-right">
+      <a href="{{ url_for('login') }}" class="btn btn-ghost">Login</a>
+      <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+    </div>
+    {% endif %}
+  </nav>
+
+  <!-- FLASH MESSAGES -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">
+        {{ message }}
+        <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    function toggleUserMenu() {
+      const dropdown = document.getElementById('userDropdown');
+      dropdown.classList.toggle('open');
+    }
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('userMenu');
+      if (menu && !menu.contains(e.target)) {
+        document.getElementById('userDropdown').classList.remove('open');
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

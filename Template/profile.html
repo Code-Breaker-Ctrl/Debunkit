@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Profile – Debunk.IT{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+  <!-- Profile header -->
+  <div class="card profile-header-card">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">{{ current_user.username[:2]|upper }}</div>
+    </div>
+    <div class="profile-info">
+      <h2 class="profile-username">{{ current_user.username }}</h2>
+      <p class="profile-email">{{ current_user.email }}</p>
+      <p class="profile-joined">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+      <span class="plan-badge">Free Plan</span>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-number">{{ stats.total }}</span>
+      <span class="stat-label">Total Analyses</span>
+    </div>
+    <div class="stat-card stat-real">
+      <span class="stat-number">{{ stats.real }}</span>
+      <span class="stat-label">Real</span>
+    </div>
+    <div class="stat-card stat-fake">
+      <span class="stat-number">{{ stats.fake }}</span>
+      <span class="stat-label">Fake</span>
+    </div>
+    <div class="stat-card stat-uncertain">
+      <span class="stat-number">{{ stats.uncertain }}</span>
+      <span class="stat-label">Uncertain</span>
+    </div>
+  </div>
+
+  <!-- Plan info -->
+  <div class="card plan-card">
+    <div class="card-header"><span class="card-title">📋 Plan Details</span></div>
+    <div class="card-body plan-details">
+      <div class="plan-item">
+        <span class="plan-key">Current Plan</span>
+        <span class="plan-val">Free</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-key">API Rate Limit</span>
+        <span class="plan-val">10 analyses / minute</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-key">Total Allowed</span>
+        <span class="plan-val">100 analyses / hour</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis history -->
+  {% if analyses %}
+  <div class="card">
+    <div class="card-header"><span class="card-title">🕒 Analysis History</span></div>
+    <div class="card-body">
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Claim</th>
+              <th>Verdict</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in analyses %}
+            <tr>
+              <td class="td-date">{{ a.created_at.strftime('%b %d, %Y') }}</td>
+              <td class="td-text">{{ a.text[:80] }}{% if a.text|length > 80 %}…{% endif %}</td>
+              <td><span class="verdict-badge verdict-{{ a.verdict|lower }}">{{ a.verdict }}</span></td>
+              <td class="td-conf">{{ a.confidence }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    <p>No analyses yet. <a href="{{ url_for('index') }}">Run your first analysis →</a></p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

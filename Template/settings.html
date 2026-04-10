@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Settings – Debunk.IT{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+
+  <div class="page-header">
+    <h1 class="page-title">⚙️ Settings</h1>
+    <p class="page-subtitle">Manage your account preferences.</p>
+  </div>
+
+  <!-- Change Password -->
+  <div class="card settings-card">
+    <div class="card-header"><span class="card-title">🔒 Change Password</span></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('settings') }}" class="settings-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="action" value="change_password" />
+
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <div class="input-wrap">
+            <input type="password" name="current_password" class="form-input" placeholder="Enter current password" autocomplete="current-password" required />
+            <button type="button" class="toggle-pw" onclick="togglePassword('current_password')" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <div class="input-wrap">
+            <input type="password" name="new_password" class="form-input" placeholder="Min 8 chars, 1 uppercase, 1 number" autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" onclick="togglePassword('new_password')" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <div class="input-wrap">
+            <input type="password" name="confirm_password" class="form-input" placeholder="Repeat new password" autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" onclick="togglePassword('confirm_password')" aria-label="Show password">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preferences -->
+  <div class="card settings-card">
+    <div class="card-header"><span class="card-title">🎨 Preferences</span></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('settings') }}" class="settings-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="action" value="update_preferences" />
+
+        <div class="form-group toggle-group">
+          <label class="form-label">Email Notifications</label>
+          <label class="toggle-switch">
+            <input type="checkbox" name="email_notifications"
+              {% if current_user.email_notifications %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+          </label>
+          <small class="form-hint">Receive analysis summary emails.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Theme</label>
+          <div class="theme-options">
+            <label class="theme-opt {% if current_user.theme_preference == 'dark' %}active{% endif %}">
+              <input type="radio" name="theme_preference" value="dark"
+                {% if current_user.theme_preference == 'dark' %}checked{% endif %} />
+              🌑 Dark
+            </label>
+            <label class="theme-opt {% if current_user.theme_preference == 'light' %}active{% endif %}">
+              <input type="radio" name="theme_preference" value="light"
+                {% if current_user.theme_preference == 'light' %}checked{% endif %} />
+              ☀️ Light
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Preferences</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- API / Rate Limits -->
+  <div class="card settings-card">
+    <div class="card-header"><span class="card-title">⚡ API & Rate Limits</span></div>
+    <div class="card-body plan-details">
+      <div class="plan-item">
+        <span class="plan-key">Plan</span>
+        <span class="plan-val">Free</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-key">Analyses per minute</span>
+        <span class="plan-val">10</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-key">Analyses per hour</span>
+        <span class="plan-val">100</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danger zone – logout -->
+  <div class="card settings-card danger-card">
+    <div class="card-header"><span class="card-title">🚪 Session</span></div>
+    <div class="card-body">
+      <p>Signed in as <strong>{{ current_user.username }}</strong> ({{ current_user.email }})</p>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

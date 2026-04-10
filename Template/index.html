@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Debunk.IT{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1 class="page-title">Fact Checker</h1>
+    <p class="page-subtitle">Paste any news, claim or article to verify it with AI.</p>
+  </div>
+
+  <!-- ANALYSIS CARD -->
+  <div class="card analysis-card">
+    <div class="card-header">
+      <span class="card-title">✍️ Enter Claim or Article</span>
+    </div>
+    <div class="card-body">
+      <textarea
+        id="claimInput"
+        class="claim-textarea"
+        placeholder="Paste news article, claim, or URL here…"
+        rows="6"
+      ></textarea>
+      <div class="char-counter"><span id="charCount">0</span> characters</div>
+      <div class="analysis-actions">
+        <button class="btn btn-primary btn-lg" id="analyzeBtn" onclick="runAnalysis()">
+          <span id="btnText">🔍 Analyze</span>
+          <span id="btnSpinner" class="spinner hidden"></span>
+        </button>
+        <button class="btn btn-ghost" onclick="clearInput()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT CARD (hidden until analysis) -->
+  <div class="card result-card hidden" id="resultCard">
+    <div class="card-header">
+      <span class="card-title">📊 Analysis Result</span>
+      <span class="result-mode" id="resultMode"></span>
+    </div>
+    <div class="card-body">
+      <div class="verdict-banner" id="verdictBanner">
+        <span class="verdict-icon" id="verdictIcon"></span>
+        <span class="verdict-label" id="verdictLabel"></span>
+        <div class="confidence-bar-wrap">
+          <div class="confidence-bar" id="confidenceBar"></div>
+          <span class="confidence-pct" id="confidencePct"></span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <h4>📌 Summary</h4>
+        <p id="resultReason"></p>
+      </div>
+
+      <div class="result-section">
+        <h4>🔍 Fact Check</h4>
+        <p id="resultFactCheck"></p>
+      </div>
+
+      <div class="result-section" id="redFlagsSection">
+        <h4>🚩 Red Flags</h4>
+        <ul id="redFlagsList" class="flag-list"></ul>
+      </div>
+
+      <div class="result-section" id="sourcesSection">
+        <h4>🔗 Sources</h4>
+        <ul id="sourcesList" class="source-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT ANALYSES -->
+  {% if recent_analyses %}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🕒 Recent Analyses</span>
+      <a href="{{ url_for('profile') }}" class="card-link">View all →</a>
+    </div>
+    <div class="card-body">
+      <div class="recent-list">
+        {% for a in recent_analyses %}
+        <div class="recent-item">
+          <span class="verdict-badge verdict-{{ a.verdict|lower }}">{{ a.verdict }}</span>
+          <span class="recent-text">{{ a.text[:80] }}{% if a.text|length > 80 %}…{% endif %}</span>
+          <span class="recent-date">{{ a.created_at.strftime('%b %d') }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const csrfToken = "{{ csrf_token() }}";
+</script>
+<script src="{{ url_for('static', filename='JS/main.js') }}"></script>
+{% endblock %}
