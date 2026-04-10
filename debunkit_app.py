@@ -4,8 +4,10 @@ Fact-checking platform with user authentication and profile system.
 """
 import json
 import logging
+import os
 import re
 from datetime import datetime
+from urllib.parse import urlparse
 
 from flask import (
     Flask,
@@ -97,7 +99,7 @@ def signup():
             errors.append("Username must be at least 3 characters.")
         if not re.match(r"^[A-Za-z0-9_]+$", username):
             errors.append("Username may only contain letters, numbers and underscores.")
-        if not email or not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+        if not email or not re.match(r"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$", email):
             errors.append("Please enter a valid email address.")
         if password != confirm_password:
             errors.append("Passwords do not match.")
@@ -143,7 +145,11 @@ def login():
 
         if user and user.check_password(password):
             login_user(user, remember=remember)
-            next_page = request.args.get("next")
+            next_page = request.args.get("next", "")
+            # Guard against open-redirect: only allow relative paths on the same host
+            parsed = urlparse(next_page)
+            if next_page and (parsed.netloc or parsed.scheme):
+                next_page = ""
             flash(f"Welcome back, {user.username}!", "success")
             return redirect(next_page or url_for("index"))
 
@@ -297,4 +303,5 @@ def create_tables():
 
 if __name__ == "__main__":
     create_tables()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug_mode, host="127.0.0.1", port=5000)
