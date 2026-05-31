@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'dark' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>DEBUNK.IT | Login</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/auth.css') }}">
+</head>
+<body>
+    <canvas id="canvas-bg" aria-hidden="true"></canvas>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1>DEBUNK.IT</h1>
+                <p>Fact-Check Engine v3.0</p>
+            </div>
+            <div class="auth-logo">
+                <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+            </div>
+
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input-group">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')">👁️</button>
+                    </div>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember me</label>
+                </div>
+
+                <button type="submit" class="auth-btn">LOGIN</button>
+
+                <div class="auth-divider">or</div>
+
+                <p class="auth-switch">
+                    Don't have an account? <a href="/register">Sign up here</a>
+                </p>
+            </form>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('debunkit_theme')
+                || document.documentElement.getAttribute('data-theme')
+                || 'system';
+
+            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
+
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const body = document.body;
+                const canvas = document.getElementById('canvas-bg');
+
+                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
+
+                if (savedBgMode === 'solid') {
+                    body.classList.add('bg-solid', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else if (savedBgMode === 'gradient') {
+                    body.classList.add('bg-gradient', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else {
+                    body.classList.add('bg-animated');
+                    if (canvas) canvas.style.display = 'block';
+                }
+            });
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
+    <script>
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+            field.setAttribute('type', type);
+        }
+        function getCSRFToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function csrfHeaders(headers = {}) {
+            return {
+                ...headers,
+                'X-CSRFToken': getCSRFToken()
+            };
+        }
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            const errorDiv = document.getElementById('error-message');
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify({ email, password, remember })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

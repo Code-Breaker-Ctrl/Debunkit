@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en"
+    data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'system' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>DEBUNK.IT</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+</head>
+
+<body>
+    <canvas id="canvas-bg" aria-hidden="true"></canvas>
+
+    <div class="app-container">
+
+        <nav class="sidebar">
+            <div class="brand">
+                <div class="brand-lockup">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+
+                    <div>
+                        <h1>DEBUNK.IT</h1>
+                        <p>SYSTEM ADMIN v3.0</p>
+                    </div>
+                </div>
+
+                <div class="server-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">SYS.STATE: OPTIMAL</span>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <button class="nav-btn active" onclick="switchView('scanner')" id="nav-scanner">
+                    <span class="icon">🔍</span> Live Scanner
+                </button>
+
+                <button class="nav-btn" onclick="switchView('history')" id="nav-history">
+                    <span class="icon">📚</span> Analysis History
+                </button>
+
+                <button class="nav-btn" onclick="switchView('analytics')" id="nav-analytics">
+                    <span class="icon">📊</span> System Analytics
+                </button>
+            </div>
+
+            <div class="user-menu" id="user-menu-container" style="display: none;">
+                <button class="user-btn" onclick="toggleUserMenu()">
+                    <span class="user-icon">👤</span>
+                    <span class="user-name" id="user-display">User</span>
+                </button>
+
+                <div class="user-dropdown" id="user-dropdown" style="display: none;">
+                    <a href="/profile" class="dropdown-item">📋 Profile</a>
+                    <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+
+                    <hr style="margin: 5px 0; border: none; border-top: 1px solid var(--border);">
+
+                    <a href="#" class="dropdown-item" onclick="showLanguageModal(); return false;">🌐 Language</a>
+                    <a href="#" class="dropdown-item" onclick="showHelpModal(); return false;">❓ Get Help</a>
+                    <a href="#" class="dropdown-item" onclick="showAboutModal(); return false;">ℹ️ About Us</a>
+
+                    <hr style="margin: 5px 0; border: none; border-top: 1px solid var(--border);">
+
+                    <a href="#" class="dropdown-item" onclick="logout(); return false;">🚪 Logout</a>
+                </div>
+            </div>
+
+            <div id="not-logged-in-message"
+                style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn" style="width: 100%;" onclick="window.location.href='/login'">
+                    LOGIN
+                </button>
+
+                <button class="btn" style="width: 100%; background: var(--border); color: var(--text);"
+                    onclick="window.location.href='/register'">
+                    SIGN UP
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-stage">
+
+            <!-- SCANNER / DASHBOARD VIEW -->
+            <div id="view-scanner" class="view-section active">
+
+                <section class="dashboard-hero">
+                    <div class="hero-copy">
+                        <div class="eyebrow">AI MISINFORMATION INTELLIGENCE</div>
+
+                        <h2>Analyze claims before they spread.</h2>
+
+                        <p>
+                            Check headlines, article links, and full text with source-aware AI,
+                            live web context, and transparent verdict reasoning.
+                        </p>
+
+                        <div class="hero-actions">
+                            <button class="btn hero-primary" onclick="focusScannerMode('title')">
+                                Scan Headline
+                            </button>
+
+                            <button class="btn hero-secondary" onclick="focusScannerMode('url')">
+                                Analyze URL
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat-card">
+                            <span class="stat-label">TOTAL SCANS</span>
+                            <strong id="dash-total-scans">--</strong>
+                        </div>
+
+                        <div class="hero-stat-card">
+                            <span class="stat-label">SUPPORTED</span>
+                            <strong id="dash-supported-count">--</strong>
+                        </div>
+
+                        <div class="hero-stat-card">
+                            <span class="stat-label">REFUTED</span>
+                            <strong id="dash-refuted-count">--</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="quick-actions">
+                    <button class="quick-card" onclick="focusScannerMode('title')">
+                        <span class="quick-icon">📰</span>
+                        <strong>Headline Check</strong>
+                        <small>Best for viral titles, short claims, and breaking news.</small>
+                    </button>
+
+                    <button class="quick-card" onclick="focusScannerMode('url')">
+                        <span class="quick-icon">🔗</span>
+                        <strong>URL Article Scan</strong>
+                        <small>Extract article text and verify with source-aware AI.</small>
+                    </button>
+
+                    <button class="quick-card" onclick="focusScannerMode('text')">
+                        <span class="quick-icon">📄</span>
+                        <strong>Full Text Analysis</strong>
+                        <small>Paste long articles, posts, or forwarded messages.</small>
+                    </button>
+                </section>
+
+                <section class="example-strip">
+                    <span>Try examples:</span>
+
+                    <button
+                        onclick="fillExampleClaim('A video of London’s Stamford Street shows the Unite the Kingdom rally held on May 16, 2026.')">
+                        Old video claim
+                    </button>
+
+                    <button
+                        onclick="fillExampleClaim('The Simpsons predicted a hantavirus outbreak on a cruise ship in 2012.')">
+                        Prediction claim
+                    </button>
+
+                    <button
+                        onclick="fillExampleClaim('Rajasthan Royals dropped Vaibhav Sooryavanshi because he is poor at fielding.')">
+                        Misleading sports claim
+                    </button>
+                </section>
+
+                <section class="dashboard-grid">
+
+                    <div class="scanner-stack">
+
+                        <div class="glass-panel scanner-panel">
+                            <div class="panel-heading-row">
+                                <div>
+                                    <h2 class="view-title dynamic-title">Misinformation Scanner</h2>
+                                    <p class="mode-hint" id="mode-hint">
+                                        Headline mode is best for quick news claims and viral titles.
+                                    </p>
+                                </div>
+
+                                <div class="scanner-status-pill">
+                                    <span class="status-dot"></span>
+                                    READY
+                                </div>
+                            </div>
+
+                            <div class="tabs upgraded-tabs" role="tablist">
+                                <button class="tab-btn active" onclick="switchTab(event, 'title')">HEADLINE</button>
+                                <button class="tab-btn" onclick="switchTab(event, 'url')">URL</button>
+                                <button class="tab-btn" onclick="switchTab(event, 'text')">TEXT</button>
+                            </div>
+
+                            <div id="input-title" class="input-section active">
+                                <input type="text" class="input-box single-line" id="val-title"
+                                    placeholder="Paste a news headline or claim here...">
+                            </div>
+
+                            <div id="input-url" class="input-section">
+                                <input type="url" class="input-box single-line" id="val-url"
+                                    placeholder="https://news.example.com/article...">
+                            </div>
+
+                            <div id="input-text" class="input-section">
+                                <textarea class="input-box" id="val-text"
+                                    placeholder="Paste full article text here..."></textarea>
+                            </div>
+
+                            <div class="scan-container" id="scanner" aria-hidden="true">
+                                <div class="scan-bar"></div>
+                            </div>
+
+                            <div class="scanner-actions">
+                                <button class="btn" id="analyze-btn" onclick="startScan()">
+                                    ▶ ANALYZE DATA
+                                </button>
+
+                                <button class="btn muted-btn" onclick="clearUI()">
+                                    ✕ CLEAR
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="result-empty glass-panel" id="result-empty">
+                            <div class="empty-icon">🛰️</div>
+
+                            <div>
+                                <h3>Ready to scan</h3>
+                                <p>
+                                    Enter a headline, URL, or full article text. Your verdict, confidence,
+                                    fact-check summary, red flags, and sources will appear here.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="result-panel glass-panel upgraded-result" id="result-panel" style="display: none;">
+                            <div class="result-top">
+                                <div>
+                                    <span class="result-kicker">ANALYSIS REPORT</span>
+                                    <span class="res-verdict" id="res-verdict">VERDICT: ---</span>
+                                </div>
+
+                                <div class="confidence-card">
+                                    <span id="res-confidence">CONFIDENCE: ---%</span>
+                                    <div class="confidence-track">
+                                        <div class="confidence-fill" id="confidence-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="result-actions-row">
+                                <button class="copy-report-btn" onclick="copyCurrentReport()">
+                                    📋 COPY REPORT
+                                </button>
+                                <button class="download-report-btn" onclick="downloadCurrentReport()">
+                                    ⬇ DOWNLOAD REPORT
+                                </button>
+                            </div>
+
+                            <div class="result-cards">
+                                <div class="result-card">
+                                    <span class="res-label">REASON</span>
+                                    <p id="res-reason"></p>
+                                </div>
+
+                                <div class="result-card">
+                                    <span class="res-label">FACT-CHECK</span>
+                                    <p id="res-factcheck"></p>
+                                </div>
+
+                                <div class="result-card">
+                                    <span class="res-label">RED FLAGS</span>
+                                    <p id="res-flags"></p>
+                                </div>
+                            </div>
+
+                            <div class="res-section sources-card" id="res-sources-container" style="display: none;">
+                                <span class="res-label">SOURCES SCANNED</span>
+                                <div id="res-sources"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <aside class="dashboard-side">
+
+                        <div class="glass-panel mini-panel">
+                            <h3>System Brief</h3>
+
+                            <div class="brief-list">
+                                <div>
+                                    <span>Input Modes</span>
+                                    <strong>Headline / URL / Text</strong>
+                                </div>
+
+                                <div>
+                                    <span>Security Layer</span>
+                                    <strong>CSRF + SSRF Guard</strong>
+                                </div>
+
+                                <div>
+                                    <span>Verdict Model</span>
+                                    <strong>Source-aware AI</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel mini-panel">
+                            <div class="panel-heading-row compact">
+                                <h3>Recent Analyses</h3>
+                                <button class="mini-link" onclick="switchView('history')">View all</button>
+                            </div>
+
+                            <div id="recent-analyses-content" class="recent-list">
+                                <p class="muted-text">Loading recent scans...</p>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                </section>
+            </div>
+
+            <!-- HISTORY VIEW -->
+            <div id="view-history" class="view-section">
+                <h2 class="view-title">Database Ledger</h2>
+
+                <div class="glass-panel">
+                    <div class="history-toolbar">
+                        <button onclick="showClearConfirmation()" class="danger-action">
+                            CLEAR DATABASE
+                        </button>
+
+                        <button onclick="loadAnalysisHistory()" class="accent-action">
+                            🔄 REFRESH
+                        </button>
+                    </div>
+
+                    <div class="history-filter-panel">
+                        <div class="history-filter-grid">
+                            <div class="history-filter-item">
+                                <label for="history-search">Search</label>
+                                <input type="text" id="history-search" placeholder="Search text, reason, fact-check..."
+                                    oninput="applyHistoryFilters()">
+                            </div>
+
+                            <div class="history-filter-item">
+                                <label for="history-verdict-filter">Verdict</label>
+                                <select id="history-verdict-filter" onchange="applyHistoryFilters()">
+                                    <option value="all">All Verdicts</option>
+                                    <option value="SUPPORTED">Supported</option>
+                                    <option value="REFUTED">Refuted</option>
+                                    <option value="MISLEADING">Misleading</option>
+                                    <option value="LOW CREDIBILITY">Low Credibility</option>
+                                    <option value="INSUFFICIENT EVIDENCE">Insufficient Evidence</option>
+                                </select>
+                            </div>
+
+                            <div class="history-filter-item">
+                                <label for="history-mode-filter">Mode</label>
+                                <select id="history-mode-filter" onchange="applyHistoryFilters()">
+                                    <option value="all">All Modes</option>
+                                    <option value="AI Analysis">AI Analysis</option>
+                                    <option value="Local NLP">Local NLP</option>
+                                    <option value="ML Model">ML Model</option>
+                                </select>
+                            </div>
+
+                            <div class="history-filter-item">
+                                <label for="history-sort">Sort</label>
+                                <select id="history-sort" onchange="applyHistoryFilters()">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="confidence-high">Confidence High → Low</option>
+                                    <option value="confidence-low">Confidence Low → High</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="history-filter-actions">
+                            <button class="mini-link" onclick="resetHistoryFilters()">Reset Filters</button>
+                            <span id="history-count-label">Showing 0 results</span>
+                        </div>
+                    </div>
+
+                    <div id="history-content">Loading analysis history...</div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS VIEW -->
+            <div id="view-analytics" class="view-section">
+                <h2 class="view-title">Engine Telemetry</h2>
+
+                <div class="glass-panel">
+                    <div id="analytics-content">Loading system analytics...</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-title">Confirm Action</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="modal-message">Are you sure?</div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn confirm" id="modal-confirm-btn" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='JS/main.js') }}"></script>
+
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('debunkit_theme')
+                || document.documentElement.getAttribute('data-theme')
+                || 'system';
+
+            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
+
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const body = document.body;
+                const canvas = document.getElementById('canvas-bg');
+
+                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
+
+                if (savedBgMode === 'solid') {
+                    body.classList.add('bg-solid', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else if (savedBgMode === 'gradient') {
+                    body.classList.add('bg-gradient', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else {
+                    body.classList.add('bg-animated');
+                    if (canvas) canvas.style.display = 'block';
+                }
+            });
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/user/profile');
+
+                if (response.ok) {
+                    const user = await response.json();
+
+                    document.getElementById('user-menu-container').style.display = 'block';
+                    document.getElementById('not-logged-in-message').style.display = 'none';
+                    document.getElementById('user-display').textContent = user.username;
+                } else {
+                    document.getElementById('user-menu-container').style.display = 'none';
+                    document.getElementById('not-logged-in-message').style.display = 'flex';
+                    showGuestMode();
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                document.getElementById('user-menu-container').style.display = 'none';
+                document.getElementById('not-logged-in-message').style.display = 'flex';
+                showGuestMode();
+            }
+
+            loadDashboardOverview();
+        });
+
+        function showGuestMode() {
+            showNotification('Guest mode: 10 analyses per day. Log in for full access.', 'info');
+        }
+
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.addEventListener('click', (e) => {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('user-dropdown');
+
+            if (userMenu && dropdown && !userMenu.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        async function logout() {
+            try {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                setTimeout(() => {
+                    window.location.replace('/');
+                }, 100);
+            } catch (error) {
+                window.location.replace('/');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,152 @@
+.profile-container {
+    max-width: 600px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #e8c84a, #f0d76a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(232, 200, 74, 0.3);
+}
+
+.profile-info h3 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--text);
+}
+
+#tier-badge {
+    margin: 5px 0 0 0;
+    background: rgba(62, 207, 122, 0.1);
+    border: 1px solid var(--success);
+    color: var(--success);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+}
+
+.detail-label {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.detail-value {
+    color: var(--text);
+}
+
+.profile-actions,
+.settings-section {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.settings-section {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.settings-section h3 {
+    margin: 0 0 15px 0;
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.setting-item label {
+    color: var(--text);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.setting-item input[type="password"],
+.setting-item select {
+    background: rgba(13, 15, 20, 0.8);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+}
+
+.setting-item input[type="password"]:focus,
+.setting-item select:focus {
+    border-color: var(--accent);
+}
+
+.message-box {
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    font-size: 12px;
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+}
+
+.message-box.success {
+    background: rgba(62, 207, 122, 0.1);
+    border: 1px solid var(--success);
+    color: var(--success);
+}
+
+.message-box.error {
+    background: rgba(224, 82, 82, 0.1);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

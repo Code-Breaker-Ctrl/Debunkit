@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ user.theme if user.theme else 'system' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>DEBUNK.IT | Settings</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/profile.css') }}">
+
+    <style>
+        :root,
+        html[data-theme="dark"] {
+            --bg: #0d0f14;
+            --panel: rgba(19, 22, 30, 0.75);
+            --border: #1e2330;
+            --accent: #e8c84a;
+            --danger: #e05252;
+            --success: #3ecf7a;
+            --text: #d4dae8;
+            --muted: #6f7890;
+            --warn: #f0a500;
+        }
+
+        html[data-theme="light"] {
+            --bg: #f4f6fb;
+            --panel: rgba(255, 255, 255, 0.88);
+            --border: #cfd5e3;
+            --accent: #8b7500;
+            --danger: #b4232e;
+            --success: #087f4f;
+            --text: #161b26;
+            --muted: #647086;
+            --warn: #b77900;
+        }
+
+        @media (prefers-color-scheme: light) {
+            html[data-theme="system"] {
+                --bg: #f4f6fb;
+                --panel: rgba(255, 255, 255, 0.88);
+                --border: #cfd5e3;
+                --accent: #8b7500;
+                --danger: #b4232e;
+                --success: #087f4f;
+                --text: #161b26;
+                --muted: #647086;
+                --warn: #b77900;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            html[data-theme="system"] {
+                --bg: #0d0f14;
+                --panel: rgba(19, 22, 30, 0.75);
+                --border: #1e2330;
+                --accent: #e8c84a;
+                --danger: #e05252;
+                --success: #3ecf7a;
+                --text: #d4dae8;
+                --muted: #6f7890;
+                --warn: #f0a500;
+            }
+        }
+
+        html,
+        body {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .settings-container {
+            display: grid;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .settings-section {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 150px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+        }
+
+        .settings-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .settings-section h3 {
+            margin: 0 0 20px 0;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item label {
+            display: block;
+            color: var(--text);
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .setting-item small {
+            display: block;
+            color: var(--muted);
+            margin-top: 7px;
+            line-height: 1.5;
+        }
+
+        .settings-input,
+        .settings-select {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(13, 15, 20, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 7px;
+            padding: 12px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        html[data-theme="light"] .settings-input,
+        html[data-theme="light"] .settings-select {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .settings-input:focus,
+        .settings-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.14);
+        }
+
+        .password-input-group {
+            display: grid;
+            grid-template-columns: 1fr 48px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .password-toggle {
+            height: 43px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .password-toggle:hover {
+            border-color: var(--accent);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .settings-btn {
+            border: none;
+            border-radius: 7px;
+            padding: 12px 18px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            background: var(--accent);
+            color: var(--bg);
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .settings-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .settings-btn.secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .settings-btn.danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .toggle-row input {
+            margin-top: 4px;
+            accent-color: var(--accent);
+            transform: scale(1.12);
+        }
+
+        .account-card {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .account-metric {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.035);
+            border-radius: 9px;
+            padding: 14px;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            color: var(--success);
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .info-page {
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .info-intro {
+            color: var(--text);
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+
+        .info-section {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.035);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .info-section h4 {
+            color: var(--accent);
+            margin: 0 0 8px 0;
+        }
+
+        .info-section p {
+            color: var(--text);
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        .info-list {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .info-list li {
+            margin-bottom: 6px;
+        }
+
+        .info-disclaimer {
+            border-left: 3px solid var(--warn);
+            padding-left: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-top: 14px;
+        }
+
+        .settings-list-item {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            border-radius: 9px;
+            padding: 15px 16px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s, transform 0.2s, background 0.2s;
+        }
+
+        .settings-list-item:hover {
+            border-color: var(--accent);
+            background: rgba(232, 200, 74, 0.08);
+            transform: translateX(3px);
+        }
+
+        .danger-zone {
+            background: rgba(224, 82, 82, 0.08);
+            border-color: var(--danger);
+        }
+
+        .danger-zone h3 {
+            color: var(--danger);
+        }
+
+        .message-box {
+            position: fixed;
+            right: 24px;
+            top: 24px;
+            z-index: 10000;
+            max-width: 430px;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            display: none;
+        }
+
+        .message-box.success {
+            background: var(--success);
+            color: var(--bg);
+        }
+
+        .message-box.error {
+            background: var(--danger);
+            color: white;
+        }
+
+        .message-box.info {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .settings-note {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+            margin-top: 12px;
+        }
+
+        html[data-theme="light"] .sidebar {
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        html[data-theme="light"] #canvas-bg {
+            opacity: 0.25;
+        }
+
+        html[data-theme="light"] .glass-panel {
+            background: var(--panel);
+            color: var(--text);
+        }
+
+        @media (max-width: 900px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .account-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas-bg" aria-hidden="true"></canvas>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="brand">
+                <div class="brand-lockup">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+
+                    <div>
+                        <h1>DEBUNK.IT</h1>
+                        <p>SYSTEM ADMIN v3.0</p>
+                    </div>
+                </div>
+
+                <div class="server-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">SYS.STATE: OPTIMAL</span>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="window.location.href='/dashboard'">
+                    <span class="icon">🏠</span> Dashboard
+                </button>
+                <button class="nav-btn" onclick="window.location.href='/profile'">
+                    <span class="icon">👤</span> Profile
+                </button>
+                <button class="nav-btn active">
+                    <span class="icon">⚙️</span> Settings
+                </button>
+            </div>
+
+            <div class="user-menu">
+                <button class="nav-btn" onclick="showLogoutModal()"
+                    style="background: rgba(224, 82, 82, 0.1); border-color: var(--danger); color: var(--danger);">
+                    <span class="icon">🚪</span> Logout
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-stage">
+            <h2 class="view-title" data-i18n="settings_title">Settings</h2>
+
+            <div class="settings-container glass-panel">
+                <div class="settings-grid">
+
+                    <section class="settings-section">
+                        <h3 data-i18n="preferences_title">🎨 Preferences</h3>
+
+                        <div class="setting-item">
+                            <label for="theme-select" data-i18n="theme_label">Theme</label>
+                            <select id="theme-select" class="settings-select" onchange="previewAppearance()">
+                                <option value="system" {% if user.theme=='system' %}selected{% endif %}>System Default
+                                </option>
+                                <option value="dark" {% if user.theme=='dark' %}selected{% endif %}>Dark Mode</option>
+                                <option value="light" {% if user.theme=='light' %}selected{% endif %}>Light Mode
+                                </option>
+                            </select>
+                            <small data-i18n="theme_hint">Choose dark, light, or follow your device theme.</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="language-select" data-i18n="language_label">Language</label>
+                            <select id="language-select" class="settings-select" onchange="previewLanguage()">
+                                <option value="en">English</option>
+                                <option value="hi">हिन्दी</option>
+                                <option value="ja">日本語</option>
+                            </select>
+                            <small data-i18n="language_hint">Changes the settings page language on this browser.</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="background-select">Background</label>
+                            <select id="background-select" class="settings-select" onchange="previewAppearance()">
+                                <option value="animated">Animated Canvas</option>
+                                <option value="solid">Solid Background</option>
+                                <option value="gradient">Soft Gradient</option>
+                            </select>
+                            <small>Choose between the animated cyber background or a cleaner static one.</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="toggle-row">
+                                <input type="checkbox" id="notifications-toggle" {% if user.email_notifications
+                                    %}checked{% endif %}>
+                                <div>
+                                    <label for="notifications-toggle" data-i18n="email_notifications">Email
+                                        Notifications</label>
+                                    <small data-i18n="email_hint">Receive important account and usage
+                                        notifications.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button class="settings-btn" onclick="savePreferences()" data-i18n="save_preferences">Save
+                                Preferences</button>
+                            <button class="settings-btn secondary" onclick="resetAppearancePreview()">Reset
+                                Preview</button>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h3 data-i18n="security_title">🔐 Security</h3>
+
+                        <div class="setting-item">
+                            <label for="current-password" data-i18n="current_password">Current Password</label>
+                            <div class="password-input-group">
+                                <input type="password" id="current-password" class="settings-input"
+                                    placeholder="Enter current password">
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePasswordVisibility('current-password')">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="new-password" data-i18n="new_password">New Password</label>
+                            <div class="password-input-group">
+                                <input type="password" id="new-password" class="settings-input"
+                                    placeholder="Min 8 chars, uppercase, number, special">
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePasswordVisibility('new-password')">👁️</button>
+                            </div>
+                            <small data-i18n="password_hint">Must include uppercase, lowercase, number, and special
+                                character.</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="confirm-password" data-i18n="confirm_password">Confirm New Password</label>
+                            <div class="password-input-group">
+                                <input type="password" id="confirm-password" class="settings-input"
+                                    placeholder="Re-enter new password">
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePasswordVisibility('confirm-password')">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button class="settings-btn" onclick="changePassword()" data-i18n="update_password">Update
+                                Password</button>
+                            <button class="settings-btn secondary" onclick="clearPasswordFields()"
+                                data-i18n="clear">Clear</button>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h3 data-i18n="privacy_title">🔒 Privacy</h3>
+
+                        <div class="setting-item">
+                            <div class="toggle-row">
+                                <input type="checkbox" id="analytics-toggle">
+                                <div>
+                                    <label for="analytics-toggle" data-i18n="share_analytics">Share Anonymous
+                                        Analytics</label>
+                                    <small data-i18n="share_analytics_hint">Local preference for now. Useful when you
+                                        later add analytics collection.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="toggle-row">
+                                <input type="checkbox" id="history-toggle">
+                                <div>
+                                    <label for="history-toggle" data-i18n="save_history">Save Analysis History</label>
+                                    <small data-i18n="save_history_hint">Local preference for now. Backend history
+                                        saving can be connected next.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button class="settings-btn" onclick="saveLocalPrivacySettings()"
+                                data-i18n="save_privacy">Save Privacy</button>
+                        </div>
+
+                        <div class="settings-note" data-i18n="privacy_note">
+                            These two privacy toggles are stored in this browser right now.
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h3 data-i18n="account_title">📋 Account</h3>
+
+                        <div class="account-card">
+                            <div class="account-metric">
+                                <div class="metric-label" data-i18n="username">Username</div>
+                                <div class="metric-value">{{ user.username }}</div>
+                            </div>
+
+                            <div class="account-metric">
+                                <div class="metric-label" data-i18n="plan">Plan</div>
+                                <div class="metric-value">Free</div>
+                            </div>
+
+                            <div class="account-metric">
+                                <div class="metric-label" data-i18n="status">Status</div>
+                                <div class="metric-value" data-i18n="active">Active</div>
+                            </div>
+                        </div>
+
+                        <div class="settings-note" data-i18n="account_note">
+                            Current limit: 20 analyses per minute based on your config.
+                        </div>
+                    </section>
+
+                    <section class="settings-section full-width">
+                        <h3 data-i18n="about_title">ℹ️ About & Legal</h3>
+
+                        <div class="settings-list">
+                            <button class="settings-list-item" onclick="showInfoModal('about')">
+                                <span>📌 <span data-i18n="about_us">About Us</span></span>
+                                <span>›</span>
+                            </button>
+
+                            <button class="settings-list-item" onclick="showInfoModal('terms')">
+                                <span>📄 <span data-i18n="terms">Terms of Service</span></span>
+                                <span>›</span>
+                            </button>
+
+                            <button class="settings-list-item" onclick="showInfoModal('privacy')">
+                                <span>🔒 <span data-i18n="privacy_policy">Privacy Policy</span></span>
+                                <span>›</span>
+                            </button>
+
+                            <button class="settings-list-item" onclick="showInfoModal('features')">
+                                <span>🧩 <span data-i18n="features">Features</span></span>
+                                <span>›</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="settings-section danger-zone full-width">
+                        <h3 data-i18n="danger_title">⚠️ Danger Zone</h3>
+
+                        <div class="setting-item">
+                            <label data-i18n="delete_account">Delete Account</label>
+                            <small data-i18n="delete_hint">
+                                This permanently deletes your account and all saved analysis history.
+                            </small>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button class="settings-btn danger" onclick="showDeleteModal()"
+                                data-i18n="delete_my_account">
+                                Delete My Account
+                            </button>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="message-box" class="message-box"></div>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('debunkit_theme')
+                || document.documentElement.getAttribute('data-theme')
+                || 'system';
+
+            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
+
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const body = document.body;
+                const canvas = document.getElementById('canvas-bg');
+
+                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
+
+                if (savedBgMode === 'solid') {
+                    body.classList.add('bg-solid', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else if (savedBgMode === 'gradient') {
+                    body.classList.add('bg-gradient', 'no-canvas');
+                    if (canvas) canvas.style.display = 'none';
+                } else {
+                    body.classList.add('bg-animated');
+                    if (canvas) canvas.style.display = 'block';
+                }
+            });
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
+
+    <script>
+        const I18N = {
+            en: {
+                settings_title: 'Settings',
+                preferences_title: '🎨 Preferences',
+                theme_label: 'Theme',
+                theme_hint: 'Choose dark, light, or follow your device theme.',
+                language_label: 'Language',
+                language_hint: 'Changes the settings page language on this browser.',
+                email_notifications: 'Email Notifications',
+                email_hint: 'Receive important account and usage notifications.',
+                save_preferences: 'Save Preferences',
+                security_title: '🔐 Security',
+                current_password: 'Current Password',
+                new_password: 'New Password',
+                confirm_password: 'Confirm New Password',
+                password_hint: 'Must include uppercase, lowercase, number, and special character.',
+                update_password: 'Update Password',
+                clear: 'Clear',
+                privacy_title: '🔒 Privacy',
+                share_analytics: 'Share Anonymous Analytics',
+                share_analytics_hint: 'Local preference for now. Useful when you later add analytics collection.',
+                save_history: 'Save Analysis History',
+                save_history_hint: 'Local preference for now. Backend history saving can be connected next.',
+                save_privacy: 'Save Privacy',
+                privacy_note: 'These two privacy toggles are stored in this browser right now.',
+                account_title: '📋 Account',
+                username: 'Username',
+                plan: 'Plan',
+                status: 'Status',
+                active: 'Active',
+                account_note: 'Current limit: 20 analyses per minute based on your config.',
+                about_title: 'ℹ️ About & Legal',
+                about_us: 'About Us',
+                terms: 'Terms of Service',
+                privacy_policy: 'Privacy Policy',
+                features: 'Features',
+                danger_title: '⚠️ Danger Zone',
+                delete_account: 'Delete Account',
+                delete_hint: 'This permanently deletes your account and all saved analysis history.',
+                delete_my_account: 'Delete My Account',
+                saved_preferences: 'Preferences saved',
+                privacy_saved: 'Privacy preferences saved on this browser',
+                about_body: 'DEBUNK.IT is an AI-assisted misinformation analysis system built to help users examine headlines, URLs, and article text using source-aware reasoning.',
+                terms_body: 'Use this app responsibly. The analysis is AI-assisted and may be incorrect. Do not treat results as legal, financial, medical, or final journalistic proof.',
+                privacy_body: 'DEBUNK.IT stores account details and saved analysis history for logged-in users. Avoid submitting private or sensitive personal information for analysis.',
+                features_body: 'Features include headline checking, URL article analysis, text analysis, source scanning, safer verdict labels, analysis history, analytics, CSRF protection, SSRF protection, and secure password updates.'
+            },
+            hi: {
+                settings_title: 'सेटिंग्स',
+                preferences_title: '🎨 पसंद',
+                theme_label: 'थीम',
+                theme_hint: 'डार्क, लाइट या अपने डिवाइस की थीम के अनुसार चुनें।',
+                language_label: 'भाषा',
+                language_hint: 'इस ब्राउज़र पर सेटिंग पेज की भाषा बदलता है।',
+                email_notifications: 'ईमेल नोटिफिकेशन',
+                email_hint: 'जरूरी account और usage notifications प्राप्त करें।',
+                save_preferences: 'पसंद सेव करें',
+                security_title: '🔐 सुरक्षा',
+                current_password: 'वर्तमान पासवर्ड',
+                new_password: 'नया पासवर्ड',
+                confirm_password: 'नया पासवर्ड दोबारा',
+                password_hint: 'Uppercase, lowercase, number और special character जरूरी है।',
+                update_password: 'पासवर्ड अपडेट करें',
+                clear: 'क्लियर',
+                privacy_title: '🔒 गोपनीयता',
+                share_analytics: 'Anonymous Analytics शेयर करें',
+                share_analytics_hint: 'अभी यह local preference है। बाद में analytics collection में काम आएगा।',
+                save_history: 'Analysis History सेव करें',
+                save_history_hint: 'अभी यह local preference है। Backend history saving बाद में connect हो सकती है।',
+                save_privacy: 'Privacy सेव करें',
+                privacy_note: 'ये privacy toggles अभी इसी browser में store होते हैं।',
+                account_title: '📋 अकाउंट',
+                username: 'यूज़रनेम',
+                plan: 'प्लान',
+                status: 'स्टेटस',
+                active: 'Active',
+                account_note: 'Current limit: आपके config के अनुसार 20 analyses per minute.',
+                about_title: 'ℹ️ जानकारी और कानूनी',
+                about_us: 'हमारे बारे में',
+                terms: 'सेवा की शर्तें',
+                privacy_policy: 'गोपनीयता नीति',
+                features: 'फीचर्स',
+                danger_title: '⚠️ Danger Zone',
+                delete_account: 'Account Delete करें',
+                delete_hint: 'यह आपका account और saved analysis history permanently delete कर देगा।',
+                delete_my_account: 'मेरा Account Delete करें',
+                saved_preferences: 'Preferences सेव हो गईं',
+                privacy_saved: 'Privacy preferences इस browser में सेव हो गईं',
+                about_body: 'DEBUNK.IT एक AI-assisted misinformation analysis system है जो headlines, URLs और article text को source-aware reasoning से जांचने में मदद करता है।',
+                terms_body: 'इस ऐप का जिम्मेदारी से उपयोग करें। यह analysis AI-assisted है और गलत भी हो सकता है। इसे legal, financial, medical या final journalistic proof न मानें।',
+                privacy_body: 'DEBUNK.IT logged-in users के account details और saved analysis history store करता है। Private या sensitive personal information submit करने से बचें।',
+                features_body: 'Features में headline checking, URL article analysis, text analysis, source scanning, safer verdict labels, analysis history, analytics, CSRF protection, SSRF protection और secure password updates शामिल हैं।'
+            },
+            ja: {
+                settings_title: '設定',
+                preferences_title: '🎨 設定',
+                theme_label: 'テーマ',
+                theme_hint: 'ダーク、ライト、または端末設定に合わせるモードを選択します。',
+                language_label: '言語',
+                language_hint: 'このブラウザ上の設定ページの言語を変更します。',
+                email_notifications: 'メール通知',
+                email_hint: '重要なアカウント通知と使用状況通知を受け取ります。',
+                save_preferences: '設定を保存',
+                security_title: '🔐 セキュリティ',
+                current_password: '現在のパスワード',
+                new_password: '新しいパスワード',
+                confirm_password: '新しいパスワード確認',
+                password_hint: '大文字、小文字、数字、特殊文字が必要です。',
+                update_password: 'パスワード更新',
+                clear: 'クリア',
+                privacy_title: '🔒 プライバシー',
+                share_analytics: '匿名分析を共有',
+                share_analytics_hint: '現在はローカル設定です。将来の分析機能に使用できます。',
+                save_history: '分析履歴を保存',
+                save_history_hint: '現在はローカル設定です。後でバックエンドに接続できます。',
+                save_privacy: 'プライバシー保存',
+                privacy_note: 'これらのプライバシー設定は現在このブラウザに保存されます。',
+                account_title: '📋 アカウント',
+                username: 'ユーザー名',
+                plan: 'プラン',
+                status: '状態',
+                active: '有効',
+                account_note: '現在の制限: config に基づいて 1 分あたり 20 分析。',
+                about_title: 'ℹ️ 情報と法的事項',
+                about_us: 'このアプリについて',
+                terms: '利用規約',
+                privacy_policy: 'プライバシーポリシー',
+                features: '機能',
+                danger_title: '⚠️ 危険ゾーン',
+                delete_account: 'アカウント削除',
+                delete_hint: 'アカウントと保存された分析履歴を完全に削除します。',
+                delete_my_account: 'アカウントを削除',
+                saved_preferences: '設定を保存しました',
+                privacy_saved: 'プライバシー設定をこのブラウザに保存しました',
+                about_body: 'DEBUNK.IT は、見出し、URL、記事本文をソース認識型の推論で確認する AI 支援の誤情報分析システムです。',
+                terms_body: 'このアプリは責任を持って使用してください。分析は AI 支援であり、誤る可能性があります。法的、金融、医療、または最終的な報道上の証明として扱わないでください。',
+                privacy_body: 'DEBUNK.IT はログインユーザーのアカウント情報と保存された分析履歴を保存します。個人情報や機密情報の送信は避けてください。',
+                features_body: '機能には、見出し確認、URL記事分析、テキスト分析、ソーススキャン、安全な判定ラベル、分析履歴、分析統計、CSRF保護、SSRF保護、安全なパスワード更新があります。'
+            }
+        };
+
+        function getCSRFToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function csrfHeaders(headers = {}) {
+            return {
+                ...headers,
+                'X-CSRFToken': getCSRFToken()
+            };
+        }
+
+        function showMessage(text, type = 'info') {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = text;
+            msgBox.className = `message-box ${type}`;
+            msgBox.style.display = 'block';
+
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, 4000);
+        }
+
+        function getCurrentLanguage() {
+            return localStorage.getItem('debunkit_language') || 'en';
+        }
+
+        function translate(key) {
+            const lang = getCurrentLanguage();
+            return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+        }
+
+        function applyLanguage(language) {
+            localStorage.setItem('debunkit_language', language);
+
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                element.textContent = translate(key);
+            });
+
+            const languageSelect = document.getElementById('language-select');
+            if (languageSelect) {
+                languageSelect.value = language;
+            }
+        }
+
+        function previewAppearance() {
+            const theme = document.getElementById('theme-select').value;
+            const backgroundMode = document.getElementById('background-select').value;
+
+            applyAppearance(theme, backgroundMode);
+        }
+
+        function previewLanguage() {
+            const language = document.getElementById('language-select').value;
+            applyLanguage(language);
+        }
+
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            field.type = field.type === 'password' ? 'text' : 'password';
+        }
+
+        function clearPasswordFields() {
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        function validateStrongPassword(password) {
+            const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            return strongPasswordRegex.test(password);
+        }
+
+        let savedAppearance = {
+            theme: 'system',
+            background: 'animated'
+        };
+
+        function applyAppearance(theme, backgroundMode) {
+            document.documentElement.setAttribute('data-theme', theme || 'system');
+
+            document.body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
+
+            const canvas = document.getElementById('canvas-bg');
+
+            if (backgroundMode === 'solid') {
+                document.body.classList.add('bg-solid', 'no-canvas');
+                if (canvas) canvas.style.display = 'none';
+            } else if (backgroundMode === 'gradient') {
+                document.body.classList.add('bg-gradient', 'no-canvas');
+                if (canvas) canvas.style.display = 'none';
+            } else {
+                document.body.classList.add('bg-animated');
+                if (canvas) canvas.style.display = 'block';
+            }
+        }
+
+        function previewAppearance() {
+            const theme = document.getElementById('theme-select').value;
+            const backgroundMode = document.getElementById('background-select').value;
+
+            applyAppearance(theme, backgroundMode);
+            showMessage('Preview applied. Click Save Preferences to keep it.', 'info');
+        }
+
+        function resetAppearancePreview() {
+            const themeSelect = document.getElementById('theme-select');
+            const backgroundSelect = document.getElementById('background-select');
+
+            themeSelect.value = savedAppearance.theme;
+            backgroundSelect.value = savedAppearance.background;
+
+            applyAppearance(savedAppearance.theme, savedAppearance.background);
+
+            showMessage('Preview reset to saved appearance.', 'info');
+        }
+
+        async function savePreferences() {
+            const theme = document.getElementById('theme-select').value;
+            const emailNotifications = document.getElementById('notifications-toggle').checked;
+            const language = document.getElementById('language-select').value;
+            const backgroundMode = document.getElementById('background-select').value;
+
+            try {
+                const response = await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        theme: theme,
+                        email_notifications: emailNotifications
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showMessage(result.error || 'Failed to save preferences', 'error');
+                    resetAppearancePreview();
+                    return;
+                }
+
+                localStorage.setItem('debunkit_language', language);
+                localStorage.setItem('debunkit_theme', theme);
+                localStorage.setItem('debunkit_bg_mode', backgroundMode);
+
+                savedAppearance.theme = theme;
+                savedAppearance.background = backgroundMode;
+
+                applyAppearance(theme, backgroundMode);
+                applyLanguage(language);
+
+                showMessage(result.message || translate('saved_preferences'), 'success');
+            } catch (error) {
+                console.error(error);
+                showMessage('Failed to save preferences', 'error');
+                resetAppearancePreview();
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!currentPassword) {
+                showMessage('Current password is required', 'error');
+                return;
+            }
+
+            if (!newPassword) {
+                showMessage('New password is required', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showMessage('New password and confirm password do not match', 'error');
+                return;
+            }
+
+            if (!validateStrongPassword(newPassword)) {
+                showMessage('Password must include uppercase, lowercase, number, and special character', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showMessage(data.error || 'Failed to update password', 'error');
+                    return;
+                }
+
+                showMessage(data.message || 'Password updated successfully', 'success');
+                clearPasswordFields();
+            } catch (error) {
+                console.error(error);
+                showMessage('Failed to update password', 'error');
+            }
+        }
+
+        function loadLocalPrivacySettings() {
+            const analyticsValue = localStorage.getItem('debunkit_share_analytics');
+            const historyValue = localStorage.getItem('debunkit_save_history');
+
+            document.getElementById('analytics-toggle').checked =
+                analyticsValue === null ? true : analyticsValue === 'true';
+
+            document.getElementById('history-toggle').checked =
+                historyValue === null ? true : historyValue === 'true';
+        }
+
+        function saveLocalPrivacySettings() {
+            const analytics = document.getElementById('analytics-toggle').checked;
+            const history = document.getElementById('history-toggle').checked;
+
+            localStorage.setItem('debunkit_share_analytics', String(analytics));
+            localStorage.setItem('debunkit_save_history', String(history));
+
+            showMessage(translate('privacy_saved'), 'success');
+        }
+
+        function createModal(id, titleText, bodyBuilder, footerBuilder) {
+            const oldModal = document.getElementById(id);
+            if (oldModal) oldModal.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = id;
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+
+            const box = document.createElement('div');
+            box.className = 'modal-box';
+            box.style.maxWidth = '540px';
+
+            const header = document.createElement('div');
+            header.className = 'modal-header';
+
+            const title = document.createElement('h3');
+            title.textContent = titleText;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'modal-close';
+            closeBtn.textContent = '×';
+            closeBtn.addEventListener('click', () => overlay.remove());
+
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+
+            const body = document.createElement('div');
+            body.className = 'modal-body';
+            bodyBuilder(body);
+
+            const footer = document.createElement('div');
+            footer.className = 'modal-footer';
+            footerBuilder(footer, overlay);
+
+            box.appendChild(header);
+            box.appendChild(body);
+            box.appendChild(footer);
+            overlay.appendChild(box);
+
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) {
+                    overlay.remove();
+                }
+            });
+
+            document.body.appendChild(overlay);
+        }
+
+        const INFO_PAGES = {
+            en: {
+                about: {
+                    title: 'About DEBUNK.IT',
+                    intro: 'DEBUNK.IT is an AI-assisted misinformation analysis system designed to help users examine headlines, URLs, and article text using source-aware reasoning. It does not claim to replace professional journalism or official fact-checking, but it gives users a structured first-level analysis.',
+                    sections: [
+                        {
+                            heading: 'What DEBUNK.IT Does',
+                            items: [
+                                'Analyzes news headlines, article URLs, and pasted article text.',
+                                'Uses live web search context to compare the claim with available sources.',
+                                'Checks whether the claim is supported, refuted, misleading, low credibility, or lacking evidence.',
+                                'Stores analysis history for logged-in users so they can review past checks.',
+                                'Shows confidence, reasoning, fact-check summary, red flags, and sources.'
+                            ]
+                        },
+                        {
+                            heading: 'Why It Was Built',
+                            text: 'Misinformation spreads quickly, especially through short headlines, screenshots, social media captions, and forwarded messages. DEBUNK.IT was built to make checking suspicious claims easier, faster, and more structured for students, researchers, and everyday users.'
+                        },
+                        {
+                            heading: 'How It Works',
+                            items: [
+                                'For headlines and text, the system searches for live context and compares the claim with web sources.',
+                                'For URLs, the system first extracts the article content and treats the submitted article as primary evidence.',
+                                'The AI then produces a verdict with a reason, fact-check explanation, and possible red flags.',
+                                'Security protections such as CSRF protection, SSRF filtering, input validation, and safer frontend rendering are included.'
+                            ]
+                        },
+                        {
+                            heading: 'Important Limitation',
+                            text: 'DEBUNK.IT is an assistant, not a final authority. Breaking news, satire, opinion pieces, old videos, edited media, and conflicting reports may still require manual verification from trusted sources.'
+                        }
+                    ],
+                    disclaimer: 'Use DEBUNK.IT as a decision-support tool, not as the final truth source.'
+                },
+
+                terms: {
+                    title: 'Terms of Service',
+                    intro: 'By using DEBUNK.IT, you agree to use the system responsibly and understand that the results are generated using automated analysis.',
+                    sections: [
+                        {
+                            heading: 'Acceptable Use',
+                            items: [
+                                'Use the platform to analyze news, public claims, URLs, and article text.',
+                                'Do not use the platform to harass, defame, threaten, or target people.',
+                                'Do not submit private passwords, personal documents, financial details, or sensitive personal data.',
+                                'Do not attempt to attack, overload, scrape, bypass, or misuse the system.'
+                            ]
+                        },
+                        {
+                            heading: 'AI-Generated Output',
+                            text: 'The verdicts and explanations are generated by an AI-assisted system. They may be incomplete, outdated, or incorrect. You should verify important claims using multiple trusted sources before making decisions.'
+                        },
+                        {
+                            heading: 'No Professional Advice',
+                            text: 'DEBUNK.IT does not provide legal, medical, financial, political, or professional advice. Any output related to those areas should be treated as informational only.'
+                        },
+                        {
+                            heading: 'Account Responsibility',
+                            items: [
+                                'You are responsible for keeping your account password safe.',
+                                'You should not share your login credentials with others.',
+                                'You may delete your account from the settings page, which removes your saved account data and analysis history.'
+                            ]
+                        },
+                        {
+                            heading: 'Service Changes',
+                            text: 'Features, limits, models, analysis methods, and saved data behavior may change as the project improves. The system may also limit requests to protect performance and prevent abuse.'
+                        }
+                    ],
+                    disclaimer: 'These terms are a project-level notice, not a formal legal contract drafted by a lawyer.'
+                },
+
+                privacy: {
+                    title: 'Privacy Policy',
+                    intro: 'DEBUNK.IT is designed to keep user data limited and relevant to the functionality of the app. This page explains what data may be stored and how it is used.',
+                    sections: [
+                        {
+                            heading: 'Data Stored for Accounts',
+                            items: [
+                                'Username and email address for login and account identification.',
+                                'Hashed password, not plain text password.',
+                                'Theme and notification preferences.',
+                                'Saved analysis history for logged-in users.'
+                            ]
+                        },
+                        {
+                            heading: 'Analysis History',
+                            text: 'When you analyze a headline, URL, or article text while logged in, the system may store the submitted content, verdict, confidence score, reason, fact-check summary, red flags, sources, mode, and timestamp. This allows the history and analytics pages to work.'
+                        },
+                        {
+                            heading: 'Local Browser Settings',
+                            items: [
+                                'Language preference is stored in your browser using localStorage.',
+                                'Background mode is stored in your browser using localStorage.',
+                                'Some privacy toggles are currently browser-local unless connected to the backend later.'
+                            ]
+                        },
+                        {
+                            heading: 'Security Measures',
+                            items: [
+                                'CSRF protection is used for unsafe requests.',
+                                'SSRF protection blocks private, local, and internal URLs.',
+                                'Frontend rendering avoids unsafe HTML injection for analysis content.',
+                                'Password changes require the current password and a stronger new password.'
+                            ]
+                        },
+                        {
+                            heading: 'What You Should Avoid Submitting',
+                            text: 'Avoid submitting private chats, passwords, personal IDs, bank information, medical records, private addresses, or confidential documents. The app is meant for public claims and news-style content.'
+                        }
+                    ],
+                    disclaimer: 'For a real public deployment, this privacy policy should be reviewed and expanded professionally.'
+                },
+
+                features: {
+                    title: 'Features',
+                    intro: 'DEBUNK.IT combines AI analysis, source scanning, account history, and security-focused engineering into one misinformation analysis dashboard.',
+                    sections: [
+                        {
+                            heading: 'Core Analysis Features',
+                            items: [
+                                'Headline analysis for quick claim checking.',
+                                'URL analysis with article scraping and source-aware reasoning.',
+                                'Full text analysis for longer articles or pasted content.',
+                                'Professional verdict labels: Supported, Refuted, Insufficient Evidence, Misleading, and Low Credibility.',
+                                'Confidence scoring with explanation.'
+                            ]
+                        },
+                        {
+                            heading: 'Evidence and Reporting',
+                            items: [
+                                'Reason section explaining the main verdict.',
+                                'Fact-check section summarizing supporting or conflicting evidence.',
+                                'Red flags section for serious warning signs.',
+                                'Sources section showing links used during analysis.',
+                                'History detail modal for reviewing full past reports.'
+                            ]
+                        },
+                        {
+                            heading: 'User Dashboard Features',
+                            items: [
+                                'Saved analysis history.',
+                                'System analytics with verdict breakdown and analysis mode summary.',
+                                'Clear database option for deleting saved analyses.',
+                                'Profile and settings pages.',
+                                'Theme, language, and background appearance controls.'
+                            ]
+                        },
+                        {
+                            heading: 'Security Features',
+                            items: [
+                                'CSRF protection for POST, PUT, PATCH, and DELETE requests.',
+                                'SSRF protection for URL scraping.',
+                                'Password strength validation.',
+                                'Current password required before password update.',
+                                'Safer DOM rendering to reduce XSS risk.'
+                            ]
+                        },
+                        {
+                            heading: 'Current Limitations',
+                            items: [
+                                'AI output can still be wrong.',
+                                'Live search snippets may miss important context.',
+                                'Breaking news can change quickly.',
+                                'Images and videos are not deeply verified yet.',
+                                'Satire, opinion, and sarcasm can be difficult to classify.'
+                            ]
+                        }
+                    ],
+                    disclaimer: 'Best used as an AI-assisted investigation tool, not a final fact-checking authority.'
+                }
+            },
+
+            hi: {
+                about: {
+                    title: 'DEBUNK.IT के बारे में',
+                    intro: 'DEBUNK.IT एक AI-assisted misinformation analysis system है जो headlines, URLs और article text को source-aware reasoning के साथ जांचने में मदद करता है। यह professional journalism या official fact-checking को replace नहीं करता, बल्कि first-level structured analysis देता है।',
+                    sections: [
+                        {
+                            heading: 'DEBUNK.IT क्या करता है',
+                            items: [
+                                'News headlines, article URLs और pasted article text को analyze करता है।',
+                                'Live web context से claim को available sources के साथ compare करता है।',
+                                'Claim supported, refuted, misleading, low credibility या insufficient evidence है या नहीं बताता है।',
+                                'Logged-in users के लिए analysis history save करता है।',
+                                'Confidence, reason, fact-check summary, red flags और sources दिखाता है।'
+                            ]
+                        },
+                        {
+                            heading: 'यह क्यों बनाया गया',
+                            text: 'Misinformation social media captions, screenshots, forwarded messages और short headlines के through बहुत तेजी से फैलती है। DEBUNK.IT suspicious claims को quickly और systematically check करने के लिए बनाया गया है।'
+                        },
+                        {
+                            heading: 'यह कैसे काम करता है',
+                            items: [
+                                'Headline/text mode में system live context search करके claim compare करता है।',
+                                'URL mode में article content scrape करके submitted article को primary evidence मानता है।',
+                                'AI verdict, reason, fact-check explanation और red flags generate करता है।',
+                                'CSRF, SSRF filtering, input validation और safer frontend rendering जैसी security protections included हैं।'
+                            ]
+                        },
+                        {
+                            heading: 'Important Limitation',
+                            text: 'DEBUNK.IT final authority नहीं है। Breaking news, satire, opinion, old videos, edited media और conflicting reports में manual verification जरूरी हो सकता है।'
+                        }
+                    ],
+                    disclaimer: 'DEBUNK.IT को decision-support tool की तरह use करें, final truth source की तरह नहीं।'
+                },
+
+                terms: {
+                    title: 'सेवा की शर्तें',
+                    intro: 'DEBUNK.IT use करके आप agree करते हैं कि आप system को responsibly use करेंगे और समझते हैं कि results automated AI-assisted analysis से generate होते हैं।',
+                    sections: [
+                        {
+                            heading: 'Acceptable Use',
+                            items: [
+                                'News, public claims, URLs और article text analyze करने के लिए use करें।',
+                                'Harassment, defamation, threats या targeting के लिए use न करें।',
+                                'Private passwords, financial details, IDs या sensitive personal data submit न करें।',
+                                'System को attack, overload, scrape या bypass करने की कोशिश न करें।'
+                            ]
+                        },
+                        {
+                            heading: 'AI Output',
+                            text: 'Verdicts और explanations AI-assisted हैं। ये incomplete, outdated या incorrect हो सकते हैं। Important decisions से पहले multiple trusted sources verify करें।'
+                        },
+                        {
+                            heading: 'Professional Advice नहीं',
+                            text: 'DEBUNK.IT legal, medical, financial, political या professional advice provide नहीं करता। ऐसे topics पर output informational ही माना जाना चाहिए।'
+                        },
+                        {
+                            heading: 'Account Responsibility',
+                            items: [
+                                'Password safe रखना user की responsibility है।',
+                                'Login credentials share न करें।',
+                                'Settings page से account delete करने पर saved history भी delete हो सकती है।'
+                            ]
+                        }
+                    ],
+                    disclaimer: 'ये project-level terms हैं, lawyer द्वारा drafted formal legal contract नहीं।'
+                },
+
+                privacy: {
+                    title: 'गोपनीयता नीति',
+                    intro: 'DEBUNK.IT user data को limited और app functionality के लिए relevant रखने की कोशिश करता है। यह page बताता है कि कौन सा data store हो सकता है।',
+                    sections: [
+                        {
+                            heading: 'Account Data',
+                            items: [
+                                'Username और email address login के लिए।',
+                                'Hashed password, plain text password नहीं।',
+                                'Theme और notification preferences।',
+                                'Logged-in users की saved analysis history।'
+                            ]
+                        },
+                        {
+                            heading: 'Analysis History',
+                            text: 'Logged-in user जब headline, URL या article text analyze करता है, तो submitted content, verdict, confidence, reason, fact-check summary, red flags, sources, mode और timestamp store हो सकते हैं।'
+                        },
+                        {
+                            heading: 'Browser Settings',
+                            items: [
+                                'Language preference browser localStorage में store होती है।',
+                                'Background mode browser localStorage में store होता है।',
+                                'कुछ privacy toggles अभी browser-local हैं।'
+                            ]
+                        },
+                        {
+                            heading: 'Security Measures',
+                            items: [
+                                'Unsafe requests के लिए CSRF protection।',
+                                'URL scraping में SSRF protection।',
+                                'Analysis content के लिए safer DOM rendering।',
+                                'Password update के लिए current password required।'
+                            ]
+                        }
+                    ],
+                    disclaimer: 'Public deployment के लिए privacy policy को professionally review करना चाहिए।'
+                },
+
+                features: {
+                    title: 'फीचर्स',
+                    intro: 'DEBUNK.IT AI analysis, source scanning, account history और security-focused engineering को एक dashboard में combine करता है।',
+                    sections: [
+                        {
+                            heading: 'Core Analysis',
+                            items: [
+                                'Headline analysis।',
+                                'URL article scraping और analysis।',
+                                'Full text analysis।',
+                                'Supported, Refuted, Insufficient Evidence, Misleading और Low Credibility verdict labels।',
+                                'Confidence scoring और explanation।'
+                            ]
+                        },
+                        {
+                            heading: 'Reporting',
+                            items: [
+                                'Reason section।',
+                                'Fact-check summary।',
+                                'Red flags।',
+                                'Sources links।',
+                                'History detail modal।'
+                            ]
+                        },
+                        {
+                            heading: 'Dashboard',
+                            items: [
+                                'Saved analysis history।',
+                                'System analytics।',
+                                'Clear database option।',
+                                'Profile और settings pages।',
+                                'Theme, language और background controls।'
+                            ]
+                        },
+                        {
+                            heading: 'Security',
+                            items: [
+                                'CSRF protection।',
+                                'SSRF protection।',
+                                'Password strength validation।',
+                                'Current password required for password change।',
+                                'Safer frontend rendering।'
+                            ]
+                        }
+                    ],
+                    disclaimer: 'इसे AI-assisted investigation tool की तरह use करें, final authority की तरह नहीं।'
+                }
+            },
+
+            ja: {
+                about: {
+                    title: 'DEBUNK.IT について',
+                    intro: 'DEBUNK.IT は、見出し、URL、記事本文をソース認識型の推論で確認する AI 支援の誤情報分析システムです。専門的な報道や公式ファクトチェックを置き換えるものではなく、一次的な構造化分析を提供します。',
+                    sections: [
+                        {
+                            heading: '主な目的',
+                            items: [
+                                'ニュース見出し、記事URL、貼り付けた本文を分析します。',
+                                'ライブ検索の文脈を使って主張を比較します。',
+                                'Supported、Refuted、Insufficient Evidence、Misleading、Low Credibility の判定を表示します。',
+                                'ログインユーザーの分析履歴を保存します。',
+                                '信頼度、理由、ファクトチェック要約、警告、ソースを表示します。'
+                            ]
+                        },
+                        {
+                            heading: '作成理由',
+                            text: '誤情報は、短い見出し、スクリーンショット、SNS投稿、転送メッセージを通じて急速に広がります。DEBUNK.IT は疑わしい主張をより簡単に確認するために作られました。'
+                        },
+                        {
+                            heading: '仕組み',
+                            items: [
+                                '見出しとテキストはライブ検索結果と比較されます。',
+                                'URLの場合、記事本文を抽出し、提出された記事を一次証拠として扱います。',
+                                'AIが判定、理由、要約、警告を生成します。',
+                                'CSRF、SSRF、入力検証、安全なDOM描画などの保護を含みます。'
+                            ]
+                        }
+                    ],
+                    disclaimer: 'DEBUNK.IT は補助ツールであり、最終的な真実の判断者ではありません。'
+                },
+
+                terms: {
+                    title: '利用規約',
+                    intro: 'DEBUNK.IT を使用することで、ユーザーは責任を持って利用し、結果が自動化された AI 支援分析であることを理解したものとします。',
+                    sections: [
+                        {
+                            heading: '許可される利用',
+                            items: [
+                                'ニュース、公開された主張、URL、記事本文の分析に利用できます。',
+                                '嫌がらせ、中傷、脅迫、個人攻撃に利用しないでください。',
+                                'パスワード、金融情報、個人ID、機密情報を送信しないでください。',
+                                'システムを攻撃、過負荷、回避、悪用しないでください。'
+                            ]
+                        },
+                        {
+                            heading: 'AI 出力について',
+                            text: '判定と説明は AI 支援で生成されます。不完全、古い、または誤った内容になる可能性があります。重要な判断には複数の信頼できる情報源を確認してください。'
+                        },
+                        {
+                            heading: '専門的助言ではありません',
+                            text: '法的、医療、金融、政治、その他専門的な助言として扱わないでください。'
+                        }
+                    ],
+                    disclaimer: 'これはプロジェクト用の説明であり、弁護士が作成した正式な契約文書ではありません。'
+                },
+
+                privacy: {
+                    title: 'プライバシーポリシー',
+                    intro: 'DEBUNK.IT は、アプリの機能に必要な範囲でデータを扱うことを目指します。このページでは保存される可能性のある情報を説明します。',
+                    sections: [
+                        {
+                            heading: '保存されるアカウント情報',
+                            items: [
+                                'ユーザー名とメールアドレス。',
+                                'ハッシュ化されたパスワード。',
+                                'テーマと通知設定。',
+                                'ログインユーザーの分析履歴。'
+                            ]
+                        },
+                        {
+                            heading: '分析履歴',
+                            text: 'ログイン中に分析を行うと、入力内容、判定、信頼度、理由、要約、警告、ソース、モード、日時が保存される場合があります。'
+                        },
+                        {
+                            heading: 'ブラウザ設定',
+                            items: [
+                                '言語設定は localStorage に保存されます。',
+                                '背景モードは localStorage に保存されます。',
+                                '一部のプライバシー設定は現在ブラウザ内のみです。'
+                            ]
+                        },
+                        {
+                            heading: 'セキュリティ対策',
+                            items: [
+                                'CSRF 保護。',
+                                'SSRF 保護。',
+                                '安全な DOM 描画。',
+                                'パスワード変更時の現在のパスワード確認。'
+                            ]
+                        }
+                    ],
+                    disclaimer: '公開運用する場合は、プライバシーポリシーを専門的に見直す必要があります。'
+                },
+
+                features: {
+                    title: '機能',
+                    intro: 'DEBUNK.IT は AI 分析、ソース確認、履歴、セキュリティ重視の設計を組み合わせた誤情報分析ダッシュボードです。',
+                    sections: [
+                        {
+                            heading: '分析機能',
+                            items: [
+                                '見出し分析。',
+                                'URL記事分析。',
+                                '全文分析。',
+                                '安全な判定ラベル。',
+                                '信頼度と説明。'
+                            ]
+                        },
+                        {
+                            heading: 'レポート機能',
+                            items: [
+                                '理由の表示。',
+                                'ファクトチェック要約。',
+                                '警告表示。',
+                                'ソースリンク。',
+                                '履歴詳細モーダル。'
+                            ]
+                        },
+                        {
+                            heading: 'ダッシュボード',
+                            items: [
+                                '分析履歴。',
+                                '分析統計。',
+                                'データベース削除。',
+                                'プロフィールと設定ページ。',
+                                'テーマ、言語、背景設定。'
+                            ]
+                        },
+                        {
+                            heading: 'セキュリティ',
+                            items: [
+                                'CSRF 保護。',
+                                'SSRF 保護。',
+                                'パスワード強度チェック。',
+                                '安全なフロントエンド描画。'
+                            ]
+                        }
+                    ],
+                    disclaimer: '最終的な判断ではなく、AI 支援の調査ツールとして使用してください。'
+                }
+            }
+        };
+
+
+        function getInfoPage(type) {
+            const lang = getCurrentLanguage();
+            const langPages = INFO_PAGES[lang] || INFO_PAGES.en;
+            return langPages[type] || INFO_PAGES.en[type];
+        }
+
+
+        function buildInfoPage(body, page) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'info-page';
+
+            const intro = document.createElement('p');
+            intro.className = 'info-intro';
+            intro.textContent = page.intro;
+            wrapper.appendChild(intro);
+
+            page.sections.forEach(section => {
+                const sectionBox = document.createElement('div');
+                sectionBox.className = 'info-section';
+
+                const heading = document.createElement('h4');
+                heading.textContent = section.heading;
+                sectionBox.appendChild(heading);
+
+                if (section.text) {
+                    const p = document.createElement('p');
+                    p.textContent = section.text;
+                    sectionBox.appendChild(p);
+                }
+
+                if (Array.isArray(section.items)) {
+                    const ul = document.createElement('ul');
+                    ul.className = 'info-list';
+
+                    section.items.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        ul.appendChild(li);
+                    });
+
+                    sectionBox.appendChild(ul);
+                }
+
+                wrapper.appendChild(sectionBox);
+            });
+
+            if (page.disclaimer) {
+                const disclaimer = document.createElement('div');
+                disclaimer.className = 'info-disclaimer';
+                disclaimer.textContent = page.disclaimer;
+                wrapper.appendChild(disclaimer);
+            }
+
+            body.appendChild(wrapper);
+        }
+
+
+        function showInfoModal(type) {
+            const page = getInfoPage(type);
+
+            if (!page) return;
+
+            createModal(
+                'info-modal-overlay',
+                page.title,
+                (body) => {
+                    buildInfoPage(body, page);
+                },
+                (footer, overlay) => {
+                    const closeBtn = document.createElement('button');
+                    closeBtn.className = 'modal-btn cancel';
+                    closeBtn.textContent = 'Close';
+                    closeBtn.addEventListener('click', () => overlay.remove());
+                    footer.appendChild(closeBtn);
+                }
+            );
+        }
+
+        function showDeleteModal() {
+            createModal(
+                'delete-modal-overlay',
+                '⚠️ Delete Account',
+                (body) => {
+                    const warning = document.createElement('p');
+                    warning.textContent = 'This action is permanent and cannot be undone.';
+                    warning.style.color = 'var(--danger)';
+                    warning.style.fontWeight = 'bold';
+
+                    const info = document.createElement('p');
+                    info.textContent = 'All account information and saved analysis history will be deleted.';
+
+                    const label = document.createElement('label');
+                    label.textContent = 'Type DELETE to confirm:';
+                    label.style.display = 'block';
+                    label.style.marginTop = '14px';
+                    label.style.marginBottom = '8px';
+                    label.style.color = 'var(--text)';
+
+                    const input = document.createElement('input');
+                    input.id = 'delete-confirmation';
+                    input.className = 'settings-input';
+                    input.placeholder = 'Type DELETE here';
+
+                    body.appendChild(warning);
+                    body.appendChild(info);
+                    body.appendChild(label);
+                    body.appendChild(input);
+                },
+                (footer, overlay) => {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'modal-btn cancel';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.addEventListener('click', () => overlay.remove());
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'modal-btn confirm';
+                    deleteBtn.textContent = 'Delete Account';
+                    deleteBtn.style.background = 'var(--danger)';
+                    deleteBtn.addEventListener('click', confirmDeleteAccount);
+
+                    footer.appendChild(cancelBtn);
+                    footer.appendChild(deleteBtn);
+                }
+            );
+        }
+
+        async function confirmDeleteAccount() {
+            const confirmation = document.getElementById('delete-confirmation').value;
+
+            if (confirmation !== 'DELETE') {
+                showMessage('Please type DELETE exactly to confirm', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user/delete', {
+                    method: 'DELETE',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showMessage(data.error || 'Failed to delete account', 'error');
+                    return;
+                }
+
+                showMessage('Account deleted. Redirecting...', 'success');
+
+                const modal = document.getElementById('delete-modal-overlay');
+                if (modal) modal.remove();
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1200);
+            } catch (error) {
+                console.error(error);
+                showMessage('Error deleting account', 'error');
+            }
+        }
+
+        function showLogoutModal() {
+            createModal(
+                'logout-modal-overlay',
+                'Confirm Logout',
+                (body) => {
+                    const p = document.createElement('p');
+                    p.textContent = 'Are you sure you want to logout?';
+                    body.appendChild(p);
+                },
+                (footer, overlay) => {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'modal-btn cancel';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.addEventListener('click', () => overlay.remove());
+
+                    const logoutBtn = document.createElement('button');
+                    logoutBtn.className = 'modal-btn confirm';
+                    logoutBtn.textContent = 'Logout';
+                    logoutBtn.addEventListener('click', confirmLogout);
+
+                    footer.appendChild(cancelBtn);
+                    footer.appendChild(logoutBtn);
+                }
+            );
+        }
+
+        async function confirmLogout() {
+            try {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: csrfHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                window.location.replace('/');
+            } catch (error) {
+                window.location.replace('/');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocalPrivacySettings();
+
+            const savedLanguage = localStorage.getItem('debunkit_language') || 'en';
+
+            const savedTheme = localStorage.getItem('debunkit_theme')
+                || document.documentElement.getAttribute('data-theme')
+                || 'system';
+
+            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
+
+            savedAppearance.theme = savedTheme;
+            savedAppearance.background = savedBgMode;
+
+            const themeSelect = document.getElementById('theme-select');
+            const languageSelect = document.getElementById('language-select');
+            const backgroundSelect = document.getElementById('background-select');
+
+            if (themeSelect) themeSelect.value = savedTheme;
+            if (languageSelect) languageSelect.value = savedLanguage;
+            if (backgroundSelect) backgroundSelect.value = savedBgMode;
+
+            applyAppearance(savedTheme, savedBgMode);
+            applyLanguage(savedLanguage);
+
+            const media = window.matchMedia('(prefers-color-scheme: dark)');
+            media.addEventListener('change', () => {
+                const currentTheme = document.getElementById('theme-select').value;
+                const currentBg = document.getElementById('background-select').value;
+
+                if (currentTheme === 'system') {
+                    applyAppearance('system', currentBg);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

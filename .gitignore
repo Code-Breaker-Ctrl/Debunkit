@@ -1,0 +1,69 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+.env.swp
+
+# Cache
+*.cache
+.pytest_cache/
+
+# Database (if added later)
+*.db
+*.sqlite
+*.sqlite3
+
+# API Keys and secrets (just in case)
+secrets/
+*_secret*
+
+*.pptx
+*.joblib

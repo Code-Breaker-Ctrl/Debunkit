@@ -1,0 +1,13 @@
+flask
+flask-cors
+flask-limiter
+flask-login
+flask-sqlalchemy
+python-dotenv
+requests
+beautifulsoup4
+ddgs
+pandas
+numpy
+scikit-learn
+joblib
