@@ -1,4 +1,3 @@
-
 <div align="center">
 
 <img src="Static/Images/debunkit-logo.png" alt="DEBUNK.IT Logo" width="80"/>
@@ -12,10 +11,21 @@
 [![Cohere](https://img.shields.io/badge/Cohere_AI-command--r-3ecf7a?style=for-the-badge)](https://cohere.com)
 [![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-3.0-e05252?style=for-the-badge)](#)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=render)](https://debunkit.onrender.com)
 
 *Analyze claims before they spread.*
 
 </div>
+
+---
+
+## 🚀 Live Demo
+
+**Try DEBUNK.IT right now — no setup required:**
+
+### 👉 [debunkit.onrender.com](https://debunkit.onrender.com)
+
+> ⏱️ The free Render instance may take **30–60 seconds to wake up** after inactivity. Just wait a moment and it will load.
 
 ---
 
@@ -35,11 +45,19 @@ Built for the modern misinformation landscape — sports claims, political state
 
 ---
 
+## 🎯 Motivation
+
+Misinformation spreads faster than fact-checking can keep up.
+
+DEBUNK.IT was built to close that gap — giving anyone the ability to quickly evaluate news headlines, article URLs, and viral claims using AI-assisted reasoning combined with real-time web evidence. No subscriptions, no black boxes — just transparent verdicts with sources, confidence scores, and clear reasoning.
+
+---
+
 ## ✨ Features
 
 | Feature | Description |
 |--------|-------------|
-| 🔍 **Hybrid AI Pipeline** | Cohere LLM + ML model + NLP fallback — always returns a verdict |
+| 🔍 **Hybrid AI Pipeline** | Cohere LLM + ML model + NLP fallback — designed to always provide an evidence-based assessment |
 | 🌐 **Live RAG Search** | Multi-query DuckDuckGo search with fact-check source detection |
 | 🔗 **URL Article Scraper** | Extracts article content and uses it as primary evidence |
 | 🛡️ **Security-First** | CSRF tokens, SSRF blocking, XSS sanitization, rate limiting, hashed passwords |
@@ -81,36 +99,66 @@ Built for the modern misinformation landscape — sports claims, political state
 
 ## 🧠 How It Works
 
+![Architecture Diagram](docs/screenshots/architecture.png)
+
+> **Note:** To add a proper architecture diagram, export the flow below as a PNG using [draw.io](https://app.diagrams.net/) or [Excalidraw](https://excalidraw.com/) and save it as `docs/screenshots/architecture.png`.
+
 ```
-User submits Headline / URL / Text
-           │
+┌─────────────────────────────────────────────────────┐
+│                      USER                           │
+│            Headline  /  URL  /  Text                │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│              INPUT VALIDATION LAYER                 │
+│     validators.py + sanitizer.py + CSRF guard       │
+└──────────────────────┬──────────────────────────────┘
+                       │
+              (URL mode only)
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│               ARTICLE SCRAPER                       │
+│         BeautifulSoup4 + redirect check             │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│             RAG — LIVE WEB SEARCH                   │
+│   DuckDuckGo: entity + direct + fact-check queries  │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│              COHERE AI ANALYSIS                     │
+│   command-r-08-2024 — domain-aware prompts          │
+│   (sports / health / political / general)           │
+└──────────┬──────────────────────────────────────────┘
+           │ AI unavailable?
            ▼
-   Input Validation & Sanitization
-   (length, null bytes, SSRF, XSS)
-           │
-           ▼ (URL mode only)
-   Article Scraper
-   (BeautifulSoup, redirect validation)
-           │
-           ▼
-   RAG — Live Web Search
-   (DuckDuckGo: entity + direct + fact-check queries)
-           │
-           ▼
-   ┌─────────────────────────┐
-   │   Cohere AI Analysis    │  ← Domain-aware prompts
-   │  (command-r-08-2024)    │    (sports / health /
-   │                         │     political / general)
-   └───────────┬─────────────┘
-               │ fails?
-               ▼
-   Local NLP Fallback
-   (pattern scoring + public figure claim detection)
-           │
-           ▼
-   Verdict + Confidence Score
-   Cached to DB (if logged in)
+┌─────────────────────────────────────────────────────┐
+│            LOCAL NLP / ML FALLBACK                  │
+│   TF-IDF + LogReg  +  pattern scoring engine        │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│         VERDICT + CONFIDENCE SCORE                  │
+│   SUPPORTED / REFUTED / MISLEADING /                │
+│   INSUFFICIENT EVIDENCE / LOW CREDIBILITY           │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│              DATABASE (SQLite / PG)                 │
+│      Cached per user — smart freshness rules        │
+└─────────────────────────────────────────────────────┘
 ```
+
+---
+
+
 
 ### Verdict System
 
@@ -121,6 +169,21 @@ User submits Headline / URL / Text
 | ⚠️ `MISLEADING` | Partly true but missing context, old media, or misrepresented |
 | 🔍 `INSUFFICIENT EVIDENCE` | Sources don't clearly confirm or deny |
 | 🚩 `LOW CREDIBILITY` | Suspicious language/weak sourcing, can't be directly refuted |
+
+---
+
+## 📈 Project Metrics
+
+| Metric | Value |
+|--------|-------|
+| 🐍 Python code | ~2,000+ lines |
+| 🌐 JavaScript | ~1,000+ lines |
+| 📡 API endpoints | 10 endpoints |
+| 🔍 Analysis modes | 3 (Headline / URL / Text) |
+| 🧠 AI verdicts | 5 possible outcomes |
+| 🔒 Security layers | 5 independent layers |
+| 👤 Auth system | Full register / login / settings / delete |
+| 💾 Caching | Smart freshness rules (6h URL / 24h text) |
 
 ---
 
@@ -264,6 +327,16 @@ DEBUNK.IT is built with a layered security approach:
 
 ## 🌍 Deployment
 
+### Current Deployment
+
+| Property | Value |
+|----------|-------|
+| 🖥️ **Platform** | [Render](https://render.com) |
+| 🌐 **URL** | [debunkit.onrender.com](https://debunkit.onrender.com) |
+| ⚡ **Status** | ✅ Production Ready |
+| 🗄️ **Database** | SQLite (upgrade to PostgreSQL planned) |
+| 🚀 **Server** | Gunicorn (multi-worker) |
+
 ### Environment Variables (Production)
 
 ```env
@@ -300,14 +373,36 @@ gunicorn -w 4 -b 0.0.0.0:5000 debunkit_app:app
 
 ---
 
+## 🏆 Project Highlights
+
+- ✅ Full-stack AI-powered misinformation detection platform
+- ✅ Live public deployment on Render
+- ✅ Cohere-powered source-aware fact-checking with domain-specific prompts
+- ✅ Hybrid architecture — AI + ML + NLP, always provides an assessment
+- ✅ Secure authentication system with CSRF, SSRF, and XSS protection
+- ✅ User analytics, scan history, and report export
+- ✅ Animated Matrix-style UI with dark/light theme support
+
+---
+
 ## 🗺️ Roadmap
 
+### ✅ Completed
+- [x] Core analysis pipeline (AI + ML + NLP)
+- [x] User authentication & accounts
+- [x] Analysis history & Engine Telemetry
+- [x] Security hardening (CSRF, SSRF, XSS, rate limiting)
+- [x] Live deployment on Render
+
+### 🔜 Planned
+- [ ] Custom domain (`debunkit.tech`)
 - [ ] Docker support
-- [ ] Hindi language UI
-- [ ] Image/video claim analysis
+- [ ] PostgreSQL migration
 - [ ] Browser extension
+- [ ] Image misinformation detection
+- [ ] Video misinformation detection
+- [ ] Multilingual support
 - [ ] Public API with authentication
-- [ ] Multilingual fact-checking support
 
 ---
 
