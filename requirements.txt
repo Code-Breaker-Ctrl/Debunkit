@@ -11,5 +11,5 @@ pandas
 numpy
 scikit-learn
 joblib
-right
+PYTHON_VERSION=3.11.11
 gunicorn
