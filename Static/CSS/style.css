@@ -1914,3 +1914,42 @@ html[data-theme="light"] .history-filter-item select {
         width: 100%;
     }
 }
+@media (max-width: 768px) {
+  body {
+    color: #f3f4f6;
+  }
+
+  .hero-title,
+  .scanner-title,
+  h1, h2, h3 {
+    color: #f8fafc !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
+  }
+
+  .hero-subtitle,
+  .scanner-description,
+  .feature-card p,
+  .stat-label,
+  .system-card span,
+  p,
+  label {
+    color: #d9dee8 !important;
+    opacity: 1 !important;
+  }
+
+  .glass-card,
+  .hero-card,
+  .scanner-card,
+  .feature-card,
+  .stat-card {
+    background: rgba(13, 17, 27, 0.88) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  canvas,
+  #matrixCanvas,
+  .canvas-bg {
+    opacity: 0.28 !important;
+  }
+}
