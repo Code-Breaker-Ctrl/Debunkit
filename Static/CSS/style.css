@@ -1953,3 +1953,61 @@ html[data-theme="light"] .history-filter-item select {
     opacity: 0.28 !important;
   }
 }
+@media (max-width: 768px) {
+  body {
+    background: #070a10 !important;
+    color: #f5f7fb !important;
+  }
+
+  .main-content,
+  .dashboard-content,
+  .hero-section,
+  .scanner-section {
+    background: rgba(7, 10, 16, 0.96) !important;
+  }
+
+  .hero-card,
+  .glass-card,
+  .scanner-card,
+  .feature-card,
+  .stat-card,
+  .system-card,
+  .recent-card {
+    background: rgba(12, 16, 25, 0.94) !important;
+    border-color: rgba(232, 200, 74, 0.35) !important;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .hero-title,
+  .scanner-title,
+  h1, h2, h3 {
+    color: #f8fafc !important;
+    opacity: 1 !important;
+  }
+
+  .hero-subtitle,
+  .scanner-description,
+  .feature-card p,
+  .stat-label,
+  .system-card span,
+  p,
+  label {
+    color: #d6dbe6 !important;
+    opacity: 1 !important;
+  }
+
+  .stat-value,
+  .hero-card strong,
+  .system-card strong {
+    color: #f8fafc !important;
+    opacity: 1 !important;
+  }
+
+  .canvas-bg,
+  #matrixCanvas,
+  canvas {
+    opacity: 0.16 !important;
+  }
+}
