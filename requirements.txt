@@ -3,6 +3,7 @@ flask-cors
 flask-limiter
 flask-login
 flask-sqlalchemy
+psycopg2-binary
 python-dotenv
 requests
 beautifulsoup4
