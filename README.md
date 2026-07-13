@@ -9,7 +9,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-e8c84a?style=for-the-badge&logo=python&logoColor=black)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.x-e8c84a?style=for-the-badge&logo=flask&logoColor=black)](https://flask.palletsprojects.com)
 [![Cohere](https://img.shields.io/badge/Cohere_AI-command--r-3ecf7a?style=for-the-badge)](https://cohere.com)
-[![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/Version-3.0-e05252?style=for-the-badge)](#)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=render)](https://debunkit.onrender.com)
 
@@ -98,10 +98,6 @@ DEBUNK.IT was built to close that gap — giving anyone the ability to quickly e
 ---
 
 ## 🧠 How It Works
-
-![Architecture Diagram](docs/screenshots/architecture.png)
-
-> **Note:** To add a proper architecture diagram, export the flow below as a PNG using [draw.io](https://app.diagrams.net/) or [Excalidraw](https://excalidraw.com/) and save it as `docs/screenshots/architecture.png`.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -420,7 +416,7 @@ Contributions are welcome! Please:
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **[MIT License](https://opensource.org/licenses/MIT)**.
 
 ---
 
