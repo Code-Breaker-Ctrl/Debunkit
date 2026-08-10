@@ -97,62 +97,7 @@ DEBUNK.IT was built to close that gap — giving anyone the ability to quickly e
 
 ---
 
-## 🧠 How It Works
-
-```
-┌─────────────────────────────────────────────────────┐
-│                      USER                           │
-│            Headline  /  URL  /  Text                │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              INPUT VALIDATION LAYER                 │
-│     validators.py + sanitizer.py + CSRF guard       │
-└──────────────────────┬──────────────────────────────┘
-                       │
-              (URL mode only)
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│               ARTICLE SCRAPER                       │
-│         BeautifulSoup4 + redirect check             │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│             RAG — LIVE WEB SEARCH                   │
-│   DuckDuckGo: entity + direct + fact-check queries  │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              COHERE AI ANALYSIS                     │
-│   command-r-08-2024 — domain-aware prompts          │
-│   (sports / health / political / general)           │
-└──────────┬──────────────────────────────────────────┘
-           │ AI unavailable?
-           ▼
-┌─────────────────────────────────────────────────────┐
-│            LOCAL NLP / ML FALLBACK                  │
-│   TF-IDF + LogReg  +  pattern scoring engine        │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│         VERDICT + CONFIDENCE SCORE                  │
-│   SUPPORTED / REFUTED / MISLEADING /                │
-│   INSUFFICIENT EVIDENCE / LOW CREDIBILITY           │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              DATABASE (SQLite / PG)                 │
-│      Cached per user — smart freshness rules        │
-└─────────────────────────────────────────────────────┘
-```
-
----
+flowchart TD    User["👤 USER INPUT<br/>(Headline / URL / Text)"]    Validate["🛡️ INPUT VALIDATION LAYER<br/>(validators.py + sanitizer.py + CSRF guard)"]    Scraper["🔗 ARTICLE SCRAPER<br/>(BeautifulSoup4 + redirect check)"]    RAG["🌐 RAG — LIVE WEB SEARCH<br/>(DuckDuckGo: entity + direct + fact-check queries)"]    AI["🤖 COHERE AI ANALYSIS<br/>(command-r-08-2024 — domain-aware prompts)"]    Fallback["🧠 LOCAL NLP / ML FALLBACK<br/>(TF-IDF + LogReg + pattern scoring engine)"]    Verdict["📊 VERDICT + CONFIDENCE SCORE<br/>(Supported / Refuted / Misleading /<br/>Insufficient Evidence / Low Credibility)"]    DB[("💾 DATABASE (SQLite / PG)<br/>Cached per user — smart freshness rules")]    User --> Validate    Validate -- "URL mode only" --> Scraper    Validate -- "Headline / Text mode" --> RAG    Scraper --> RAG    RAG --> AI    AI -- "AI unavailable?" --> Fallback    AI --> Verdict    Fallback --> Verdict    Verdict --> DB    %% Styling to match DEBUNK.IT badge colors    classDef userInput fill:#e8c84a,stroke:#000,stroke-width:2px,color:#000;    classDef security fill:#e05252,stroke:#000,stroke-width:2px,color:#fff;    classDef aiEngine fill:#3ecf7a,stroke:#000,stroke-width:2px,color:#000;    classDef dataBase fill:#6f7890,stroke:#000,stroke-width:2px,color:#fff;    class User,Verdict userInput;    class Validate security;    class Scraper,RAG,AI,Fallback aiEngine;    class DB dataBase;
 
 
 
