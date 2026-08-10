@@ -95,7 +95,28 @@ DEBUNK.IT was built to close that gap — giving anyone the ability to quickly e
   </tr>
 </table>
 
-flowchart TD    A["USER INPUT: Headline, URL, or Text"]    B["INPUT VALIDATION LAYER"]    C["ARTICLE SCRAPER"]    D["RAG LIVE WEB SEARCH"]    E["COHERE AI ANALYSIS"]    F["LOCAL NLP / ML FALLBACK"]    G["VERDICT + CONFIDENCE SCORE"]    H[("DATABASE")]    A --> B    B -- URL mode only --> C    B -- Headline or Text mode --> D    C --> D    D --> E    E -- AI unavailable --> F    E --> G    F --> G    G --> H    classDef yellow fill:#e8c84a,stroke:#333,stroke-width:2px,color:#000;    classDef red fill:#e05252,stroke:#333,stroke-width:2px,color:#fff;    classDef green fill:#3ecf7a,stroke:#333,stroke-width:2px,color:#000;    classDef grey fill:#6f7890,stroke:#333,stroke-width:2px,color:#fff;    class A,G yellow;    class B red;    class C,D,E,F green;    class H grey;
+```mermaid
+flowchart TD
+    A["USER INPUT"] --> B["INPUT VALIDATION LAYER"]
+    B -- "URL mode only" --> C["ARTICLE SCRAPER"]
+    B -- "Headline or Text mode" --> D["RAG LIVE WEB SEARCH"]
+    C --> D
+    D --> E["COHERE AI ANALYSIS"]
+    E -- "AI unavailable" --> F["LOCAL NLP / ML FALLBACK"]
+    E --> G["VERDICT + CONFIDENCE SCORE"]
+    F --> G
+    G --> H[("DATABASE")]
+
+    classDef yellow fill:#e8c84a,stroke:#333,stroke-width:2px,color:#000;
+    classDef red fill:#e05252,stroke:#333,stroke-width:2px,color:#fff;
+    classDef green fill:#3ecf7a,stroke:#333,stroke-width:2px,color:#000;
+    classDef grey fill:#6f7890,stroke:#333,stroke-width:2px,color:#fff;
+
+    class A,G yellow;
+    class B red;
+    class C,D,E,F green;
+    class H grey;
+```
 
 
 
