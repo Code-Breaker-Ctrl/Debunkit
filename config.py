@@ -67,11 +67,15 @@ class Config:
     LOG_BACKUP_COUNT = 5
 
     # Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///debunkit.db"  # Default to SQLite for development
-    )
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///debunkit.db")
+    
+    # Some platforms provide postgres://, but SQLAlchemy prefers postgresql://
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,  # Verify connections before using
         "pool_recycle": 3600,   # Recycle connections every hour

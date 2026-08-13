@@ -1,4 +1,3 @@
-
 <div align="center">
 
 <img src="Static/Images/debunkit-logo.png" alt="DEBUNK.IT Logo" width="80"/>
@@ -10,7 +9,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-e8c84a?style=for-the-badge&logo=python&logoColor=black)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.x-e8c84a?style=for-the-badge&logo=flask&logoColor=black)](https://flask.palletsprojects.com)
 [![Cohere](https://img.shields.io/badge/Cohere_AI-command--r-3ecf7a?style=for-the-badge)](https://cohere.com)
-[![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/Version-3.0-e05252?style=for-the-badge)](#)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=render)](https://debunkit.onrender.com)
 
@@ -96,68 +95,29 @@ DEBUNK.IT was built to close that gap — giving anyone the ability to quickly e
   </tr>
 </table>
 
----
+```mermaid
+flowchart TD
+    A["USER INPUT"] --> B["INPUT VALIDATION LAYER"]
+    B -- "URL mode only" --> C["ARTICLE SCRAPER"]
+    B -- "Headline or Text mode" --> D["RAG LIVE WEB SEARCH"]
+    C --> D
+    D --> E["COHERE AI ANALYSIS"]
+    E -- "AI unavailable" --> F["LOCAL NLP / ML FALLBACK"]
+    E --> G["VERDICT + CONFIDENCE SCORE"]
+    F --> G
+    G --> H[("DATABASE")]
 
-## 🧠 How It Works
+    classDef yellow fill:#e8c84a,stroke:#333,stroke-width:2px,color:#000;
+    classDef red fill:#e05252,stroke:#333,stroke-width:2px,color:#fff;
+    classDef green fill:#3ecf7a,stroke:#333,stroke-width:2px,color:#000;
+    classDef grey fill:#6f7890,stroke:#333,stroke-width:2px,color:#fff;
 
-![Architecture Diagram](docs/screenshots/architecture.png)
-
-> **Note:** To add a proper architecture diagram, export the flow below as a PNG using [draw.io](https://app.diagrams.net/) or [Excalidraw](https://excalidraw.com/) and save it as `docs/screenshots/architecture.png`.
-
-```
-┌─────────────────────────────────────────────────────┐
-│                      USER                           │
-│            Headline  /  URL  /  Text                │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              INPUT VALIDATION LAYER                 │
-│     validators.py + sanitizer.py + CSRF guard       │
-└──────────────────────┬──────────────────────────────┘
-                       │
-              (URL mode only)
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│               ARTICLE SCRAPER                       │
-│         BeautifulSoup4 + redirect check             │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│             RAG — LIVE WEB SEARCH                   │
-│   DuckDuckGo: entity + direct + fact-check queries  │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              COHERE AI ANALYSIS                     │
-│   command-r-08-2024 — domain-aware prompts          │
-│   (sports / health / political / general)           │
-└──────────┬──────────────────────────────────────────┘
-           │ AI unavailable?
-           ▼
-┌─────────────────────────────────────────────────────┐
-│            LOCAL NLP / ML FALLBACK                  │
-│   TF-IDF + LogReg  +  pattern scoring engine        │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│         VERDICT + CONFIDENCE SCORE                  │
-│   SUPPORTED / REFUTED / MISLEADING /                │
-│   INSUFFICIENT EVIDENCE / LOW CREDIBILITY           │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              DATABASE (SQLite / PG)                 │
-│      Cached per user — smart freshness rules        │
-└─────────────────────────────────────────────────────┘
+    class A,G yellow;
+    class B red;
+    class C,D,E,F green;
+    class H grey;
 ```
 
----
 
 
 
@@ -421,7 +381,7 @@ Contributions are welcome! Please:
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **[MIT License](LICENSE)**.
 
 ---
 
