@@ -13,4 +13,3 @@ numpy
 scikit-learn
 joblib
 gunicorn
-pytest
