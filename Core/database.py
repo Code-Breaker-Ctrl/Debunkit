@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,12 +28,12 @@ class Analysis(db.Model):
     fact_check = db.Column(db.Text)
     
     # Details
-    red_flags = db.Column(JSON)  
-    sources = db.Column(JSON)    
+    red_flags = db.Column(db.JSON)  
+    sources = db.Column(db.JSON)    
     mode = db.Column(db.String(50))
     
     # Metadata
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     ip_address = db.Column(db.String(50))
     user_agent = db.Column(db.String(255))
     
@@ -110,7 +109,7 @@ def get_analysis_history(user=None, limit=50, offset=0):
 def get_analysis_by_id(analysis_id):
     """Get specific analysis by ID."""
     try:
-        analysis = Analysis.query.get(analysis_id)
+        analysis = db.session.get(Analysis, int(analysis_id))
         return analysis.to_dict() if analysis else None
     except Exception as e:
         logger.error(f"Failed to fetch analysis: {e}")

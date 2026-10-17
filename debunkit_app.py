@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from config import config
 from Core.database import (
@@ -84,6 +84,11 @@ def csrf_protect():
     Require CSRF token for every unsafe request.
     Safe methods like GET/HEAD/OPTIONS are ignored.
     """
+    # ── TESTING/AUTOMATION BYPASS ──
+    # Allow automated unit tests to bypass CSRF if explicitly configured
+    if app.config.get("TESTING") or not app.config.get("WTF_CSRF_ENABLED", True):
+        return
+
     if request.method not in UNSAFE_METHODS:
         return
 
@@ -144,7 +149,12 @@ def is_cached_analysis_fresh(analysis, input_type):
     else:
         max_age = timedelta(hours=text_cache_hours)
 
-    age = datetime.utcnow() - analysis.timestamp
+    now = datetime.now(timezone.utc)
+    ts = analysis.timestamp
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+
+    age = now - ts
     return age <= max_age
 
 
@@ -181,7 +191,7 @@ limiter = Limiter(
     app=app,
     key_func=get_remote_address,
     default_limits=[config.RATELIMIT_DEFAULT],
-    storage_uri="memory://"
+    storage_uri=getattr(config, "RATELIMIT_STORAGE_URI", "memory://")
 )
 
 login_manager = LoginManager()
@@ -385,7 +395,7 @@ def analyze_limit():
     Dynamic rate limit for analyze endpoint.
     """
     if not current_user.is_authenticated:
-        return "10 per day"
+        return "100 per day"
     return config.RATELIMIT_DEFAULT
 
 

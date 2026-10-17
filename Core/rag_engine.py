@@ -1,5 +1,8 @@
 import re
+import time
 import logging
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
@@ -8,19 +11,38 @@ from utils.validators import validate_url_input, ValidationError
 
 logger = logging.getLogger(__name__)
 
+# In-memory search cache: query_hash -> (timestamp, context_block, sources)
+_SEARCH_CACHE = {}
+_CACHE_LOCK = threading.Lock()
+
+
 def get_live_context(query):
     """
     Search the internet for live context.
 
-    Improved version:
-    - Uses multiple search queries
-    - Searches fact-check style queries
-    - Keeps longer snippets
-    - Deduplicates URLs
+    Optimized version:
+    - High-performance in-memory TTL cache (prevents repeat rate-limiting)
+    - Parallelized search queries using ThreadPoolExecutor
+    - Streamlined 2-query strategy (direct claim + fact-check validation)
+    - Resilient fallback on network/rate-limiting errors
     """
     logger.info(f"RAG Engine: Processing query with {len(query)} characters")
 
-    def clean_query_text(text, max_words=18):
+    # Check cache first
+    cache_key = query.strip().lower()
+    ttl = getattr(config, "RAG_CACHE_TTL_SECONDS", 3600)
+    now = time.time()
+
+    with _CACHE_LOCK:
+        if cache_key in _SEARCH_CACHE:
+            cached_time, cached_block, cached_sources = _SEARCH_CACHE[cache_key]
+            if now - cached_time < ttl:
+                logger.info("[*] RAG CACHE HIT: Serving context from memory")
+                return cached_block, cached_sources
+            else:
+                del _SEARCH_CACHE[cache_key]
+
+    def clean_query_text(text, max_words=14):
         text = re.sub(r'\s+', ' ', text).strip()
         words = text.split()
         return " ".join(words[:max_words])
@@ -44,72 +66,66 @@ def get_live_context(query):
         )
 
         keywords = list(dict.fromkeys(entities + years + important_lower_terms))
-        return " ".join(keywords[:10])
+        return " ".join(keywords[:8])
 
     try:
         direct_query = clean_query_text(query)
         entity_query = build_entity_query(query)
 
         search_queries = []
-
-        if entity_query.strip():
-            search_queries.append(entity_query)
-
         if direct_query.strip():
             search_queries.append(direct_query)
-            search_queries.append(f'{direct_query} fact check false misleading')
-
-        lower_query = query.lower()
-
-        if any(word in lower_query for word in ["video", "photo", "image", "clip", "footage"]):
-            search_queries.append(f'{direct_query} old video miscaptioned misleading fact check')
-
-        if any(word in lower_query for word in ["hantavirus", "virus", "health", "outbreak"]):
-            search_queries.append(f'{direct_query} Reuters Fact Check')
+            search_queries.append(f"{direct_query} fact check")
+        elif entity_query.strip():
+            search_queries.append(entity_query)
 
         # Remove duplicate search queries
-        search_queries = list(dict.fromkeys([q for q in search_queries if q.strip()]))
+        search_queries = list(dict.fromkeys([q for q in search_queries if q.strip()]))[:2]
 
         if not search_queries:
             logger.warning("Could not extract meaningful search query")
             return "No extractable search terms found.", []
 
-        logger.info(f"RAG search queries: {search_queries}")
+        logger.info(f"RAG search queries (parallelized): {search_queries}")
 
         all_results = []
         seen_urls = set()
 
-        with DDGS() as ddgs:
-            for search_query in search_queries:
-                # News search
-                try:
-                    news_results = list(ddgs.news(search_query, max_results=4))
-                except Exception as e:
-                    logger.warning(f"News search failed for '{search_query}': {e}")
-                    news_results = []
+        def fetch_ddg_results(search_query):
+            query_results = []
+            try:
+                with DDGS() as ddgs:
+                    # Fetch news first
+                    try:
+                        news_results = list(ddgs.news(search_query, max_results=4))
+                    except Exception:
+                        news_results = []
 
-                # Text search
-                try:
-                    text_results = list(ddgs.text(search_query, max_results=4))
-                except Exception as e:
-                    logger.warning(f"Text search failed for '{search_query}': {e}")
-                    text_results = []
+                    # Fetch text results
+                    try:
+                        text_results = list(ddgs.text(search_query, max_results=4))
+                    except Exception:
+                        text_results = []
 
-                for res in news_results + text_results:
+                    for res in news_results + text_results:
+                        res["_search_query"] = search_query
+                        query_results.append(res)
+            except Exception as search_err:
+                logger.warning(f"DDG search worker failed for '{search_query}': {search_err}")
+            return query_results
+
+        # Execute searches concurrently
+        with ThreadPoolExecutor(max_workers=len(search_queries)) as executor:
+            future_to_query = {executor.submit(fetch_ddg_results, q): q for q in search_queries}
+            for future in as_completed(future_to_query):
+                for res in future.result():
                     url = res.get("url", res.get("href", "#"))
-
                     if not url or url == "#" or url in seen_urls:
                         continue
-
                     seen_urls.add(url)
-                    res["_search_query"] = search_query
                     all_results.append(res)
-
                     if len(all_results) >= 8:
                         break
-
-                if len(all_results) >= 8:
-                    break
 
         if not all_results:
             logger.info("No search results found")
@@ -118,7 +134,7 @@ def get_live_context(query):
         context_block = "LIVE WEB SEARCH RESULTS:\n"
         sources = []
 
-        for i, res in enumerate(all_results, 1):
+        for i, res in enumerate(all_results[:8], 1):
             title = res.get("title", "Unknown")
             body = res.get("body", res.get("snippet", ""))
             url = res.get("url", res.get("href", "#"))
@@ -140,6 +156,11 @@ def get_live_context(query):
             )
 
         logger.info(f"RAG: Found {len(all_results)} results, extracted {len(sources)} valid sources")
+
+        # Save to memory cache
+        with _CACHE_LOCK:
+            _SEARCH_CACHE[cache_key] = (now, context_block, sources)
+
         return context_block, sources
 
     except Exception as e:

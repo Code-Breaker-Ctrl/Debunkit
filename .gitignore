@@ -32,6 +32,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Virtual environments
+.venv/
 venv/
 env/
 ENV/
@@ -52,18 +53,25 @@ venv.bak/
 Thumbs.db
 .env.swp
 
-# Cache
+# Cache & Testing
 *.cache
 .pytest_cache/
+htmlcov/
+.coverage
 
-# Database (if added later)
+# Database
 *.db
 *.sqlite
 *.sqlite3
+instance/
 
-# API Keys and secrets (just in case)
+# Large datasets & trained models
+*.csv
+*.joblib
+*.pptx
+debunkit_ai_results*.json
+debunkit_metrics_results*.json
+
+# API Keys and secrets
 secrets/
 *_secret*
-
-*.pptx
-*.joblib

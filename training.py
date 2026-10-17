@@ -1,3 +1,5 @@
+import os
+import sys
 import pandas as pd
 import numpy as np
 import joblib
@@ -10,18 +12,42 @@ from sklearn.metrics import (
     accuracy_score, classification_report, confusion_matrix, roc_auc_score
 )
 
-# 1) Load
-df = pd.read_csv("news_benchmark_200_clean.csv")
+# 1) Locate Dataset
+dataset_candidates = [
+    "news_benchmark_200_clean.csv",
+    "WELFake_Dataset.csv",
+    "fakenews_temp.csv"
+]
+csv_path = None
+if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
+    csv_path = sys.argv[1]
+else:
+    for candidate in dataset_candidates:
+        if os.path.exists(candidate):
+            csv_path = candidate
+            break
+
+if not csv_path:
+    raise FileNotFoundError("No dataset CSV found. Provide a path or place a dataset in the project root.")
+
+print(f"📦 Loading dataset from: {csv_path}")
+df = pd.read_csv(csv_path)
 
 # 2) Cleanup
 df = df.dropna(subset=["title", "text", "label"])
-df["label"] = df["label"].astype(str).str.strip().str.upper()
-df = df[df["label"].isin(["FAKE", "REAL"])].copy()
+
+# Handle string ("FAKE"/"REAL") or numeric (0/1) labels
+if df["label"].dtype == object:
+    df["label"] = df["label"].astype(str).str.strip().str.upper()
+    df = df[df["label"].isin(["FAKE", "REAL", "0", "1"])].copy()
+    y = df["label"].map({"FAKE": 0, "REAL": 1, "0": 0, "1": 1}).values
+else:
+    df = df[df["label"].isin([0, 1])].copy()
+    y = df["label"].values
 
 # 3) Features/target
 df["combined_text"] = df["title"].fillna("") + " " + df["text"].fillna("")
 X = df["combined_text"].values
-y = df["label"].map({"FAKE": 0, "REAL": 1}).values
 
 # 4) Model pipeline
 pipe = Pipeline([

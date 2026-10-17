@@ -40,8 +40,8 @@ class Config:
     
     # Rate Limiting
     RATELIMIT_ENABLED = os.getenv("RATELIMIT_ENABLED", "True") == "True"
-    RATELIMIT_DEFAULT = "20 per minute"  
-                       
+    RATELIMIT_DEFAULT = "20 per minute"
+    RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     # Input Validation
     MAX_TEXT_LENGTH = 10000
     MIN_TEXT_LENGTH = 4
@@ -56,6 +56,7 @@ class Config:
     # RAG Engine
     RAG_SEARCH_RESULTS = 3
     RAG_TIMEOUT = int(os.getenv("RAG_TIMEOUT", "15"))
+    RAG_CACHE_TTL_SECONDS = int(os.getenv("RAG_CACHE_TTL_SECONDS", "3600"))
     
     # CORS Configuration
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5000").split(",")
@@ -68,14 +69,11 @@ class Config:
 
     # Database Configuration
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///debunkit.db")
-    
-    # Some platforms provide postgres://, but SQLAlchemy prefers postgresql://
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    
+
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,  # Verify connections before using
         "pool_recycle": 3600,   # Recycle connections every hour
@@ -94,9 +92,12 @@ class ProductionConfig(Config):
     
 class TestingConfig(Config):
     """Testing configuration"""
-    DEBUG = True
+    DEBUG = False
     TESTING = True
+    WTF_CSRF_ENABLED = False
     COHERE_API_KEY = "test-key"
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    RATELIMIT_ENABLED = False
 
 # Select config based on environment
 ENV = os.getenv("FLASK_ENV", "development").lower()

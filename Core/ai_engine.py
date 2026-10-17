@@ -734,6 +734,7 @@ Respond ONLY with valid JSON:
             {"role": "system", "content": DYNAMIC_PROMPT},
             {"role": "user", "content": "Analyze this claim based on the evidence provided above."}
         ],
+        "response_format": {"type": "json_object"},
         "temperature": 0.0,
         "max_tokens": 700,
     }).encode("utf-8")
@@ -760,12 +761,19 @@ Respond ONLY with valid JSON:
 
         raw = data["message"]["content"][0]["text"].strip()
 
-        if "```" in raw:
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-
-        parsed_result = json.loads(raw.strip())
+        try:
+            parsed_result = json.loads(raw)
+        except json.JSONDecodeError:
+            # Fallback for fence or brace wrapping
+            json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+            if json_match:
+                parsed_result = json.loads(json_match.group(1).strip())
+            else:
+                brace_match = re.search(r"(\{.*\})", raw, re.DOTALL)
+                if brace_match:
+                    parsed_result = json.loads(brace_match.group(1).strip())
+                else:
+                    raise
 
         parsed_result["verdict"] = normalize_verdict(parsed_result.get("verdict"))
         parsed_result["confidence"] = clamp_confidence(parsed_result.get("confidence"), default=55)
