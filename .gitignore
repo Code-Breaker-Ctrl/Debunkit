@@ -72,6 +72,10 @@ instance/
 debunkit_ai_results*.json
 debunkit_metrics_results*.json
 
+# Binaries and tools
+tools/
+*.exe
+
 # API Keys and secrets
 secrets/
 *_secret*
