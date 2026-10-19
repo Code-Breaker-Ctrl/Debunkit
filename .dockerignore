@@ -1,0 +1,37 @@
+# .dockerignore
+.venv/
+venv/
+.git/
+.gitignore
+.github/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Large datasets & models
+*.csv
+*.joblib
+*.pptx
+debunkit_ai_results*.json
+debunkit_metrics_results*.json
+
+# Cache & Testing
+.pytest_cache/
+tests/
+htmlcov/
+.coverage
+
+# Database & logs
+instance/
+*.db
+*.sqlite
+*.sqlite3
+logs/
+*.log
+
+# Local tools
+tools/
+*.exe
+start_tunnel.bat
