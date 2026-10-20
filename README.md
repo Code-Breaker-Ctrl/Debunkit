@@ -11,7 +11,7 @@
 [![Cohere](https://img.shields.io/badge/Cohere_AI-command--r-3ecf7a?style=for-the-badge)](https://cohere.com)
 [![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/Version-3.0-e05252?style=for-the-badge)](#)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=render)](https://debunkit.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=railway)](https://debunkit-production.up.railway.app)
 
 *Analyze claims before they spread.*
 
