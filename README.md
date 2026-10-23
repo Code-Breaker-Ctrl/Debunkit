@@ -23,7 +23,7 @@
 
 **Try DEBUNK.IT right now — no setup required:**
 
-### 👉 [debunkit.onrender.com](https://debunkit.onrender.com)
+### 👉 [debunkit-production.up.railway.app/dashboard](https://debunkit-production.up.railway.app/dashboard)
 
 > ⏱️ The free Render instance may take **30–60 seconds to wake up** after inactivity. Just wait a moment and it will load.
 
