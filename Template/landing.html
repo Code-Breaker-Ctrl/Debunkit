@@ -60,7 +60,7 @@
                         <span>★ Star</span>
                     </a>
 
-                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle 8-Bit Audio Sound Effects">
+                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Anime-Themed Sound Effects">
                         🔇 SFX: OFF
                     </button>
 
@@ -487,14 +487,22 @@
         <!-- ================================================================= -->
         <section id="reviews" class="testimonials-section">
             <div class="section-header">
-                <span class="section-eyebrow">PRAISE & PARANOIA</span>
+                <span class="section-eyebrow">COMMUNITY & VERDICTS</span>
                 <h2 class="section-title">STORIES FROM THE FRONTLINE</h2>
                 <p class="section-desc">
                     What happens when normal internet users suddenly gain the superpower of instant truth verification.
                 </p>
+                <div class="reviews-action-buttons">
+                    <button id="btn-open-review-modal" class="btn btn-primary btn-sm">
+                        <span>✍️</span> SUBMIT A REVIEW
+                    </button>
+                    <a href="https://github.com/Code-Breaker-Ctrl/Debunkit/discussions" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">
+                        <span>⭐</span> REVIEW ON GITHUB
+                    </a>
+                </div>
             </div>
 
-            <div class="quotes-grid">
+            <div class="quotes-grid" id="quotes-grid">
                 <!-- Review 1 -->
                 <div class="quote-card">
                     <div class="quote-stars">★★★★★</div>
@@ -576,7 +584,7 @@
                     <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
                     <div>
                         <div class="footer-brand-title">DEBUNK.IT</div>
-                        <div class="footer-brand-tagline">The Internet's Bullshit Radar v3.8</div>
+                        <div class="footer-brand-tagline">The Internet's Bullshit Radar • Built by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="creator-name-link">@Code-Breaker-Ctrl</a></div>
                     </div>
                 </div>
 
@@ -588,6 +596,11 @@
                         <li><a href="/login">Sign In</a></li>
                         <li><a href="/register">Register</a></li>
                     </ul>
+
+                    <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="footer-creator-chip" title="View Code-Breaker-Ctrl on GitHub">
+                        <span class="creator-spark">⚡</span>
+                        <span>Built by <strong>Code-Breaker-Ctrl</strong></span>
+                    </a>
 
                     <a href="https://github.com/Code-Breaker-Ctrl/Debunkit" target="_blank" rel="noopener noreferrer" class="footer-gh-star" title="Star DEBUNK.IT on GitHub">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -601,7 +614,7 @@
 
             <div class="footer-bottom">
                 <div class="footer-copy">
-                    &copy; 2026 DEBUNK.IT. Built to incinerate misinformation. All rights reserved.
+                    &copy; 2026 DEBUNK.IT. Architected & built with ⚡ by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="creator-credit">Code-Breaker-Ctrl</a>. All rights reserved.
                 </div>
                 <div class="footer-disclaimer">
                     Disclaimer: No pigeons or microwaves were harmed during testing. Always consult real doctors rather than WhatsApp forwards.
@@ -609,6 +622,54 @@
             </div>
         </div>
     </footer>
+
+        <!-- ================================================================= -->
+    <!-- SUBMIT REVIEW MODAL                                               -->
+    <!-- ================================================================= -->
+    <div id="review-modal-backdrop" class="review-modal-backdrop" aria-hidden="true">
+        <div class="review-modal-dialog" role="dialog" aria-labelledby="modal-review-title">
+            <div class="review-modal-header">
+                <div class="modal-badge">✨ SHARE YOUR VERDICT</div>
+                <button id="btn-close-review-modal" class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <h3 id="modal-review-title" class="review-modal-title">Leave a Review for DEBUNK.IT</h3>
+            <p class="review-modal-subtitle">Help fellow truth seekers. Real reviews submitted here are saved to the community wall!</p>
+            
+            <form id="community-review-form" class="review-form">
+                <div class="form-group">
+                    <label for="review-author">Your Name / Handle</label>
+                    <input type="text" id="review-author" class="form-input" placeholder="e.g. Alex M. or @TruthHunter" required maxlength="60">
+                </div>
+
+                <div class="form-group">
+                    <label for="review-role">Your Role / Tagline</label>
+                    <input type="text" id="review-role" class="form-input" placeholder="e.g. Student, Tech Journalist, WhatsApp Survivor" required maxlength="60">
+                </div>
+
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="star-rating-picker" id="star-picker">
+                        <span class="star-pick active" data-val="1">★</span>
+                        <span class="star-pick active" data-val="2">★</span>
+                        <span class="star-pick active" data-val="3">★</span>
+                        <span class="star-pick active" data-val="4">★</span>
+                        <span class="star-pick active" data-val="5">★</span>
+                    </div>
+                    <input type="hidden" id="review-rating-val" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="review-content">Your Review</label>
+                    <textarea id="review-content" class="form-textarea" placeholder="How did DEBUNK.IT help you spot internet bullshit or save your sanity?" required minlength="10" maxlength="400" rows="3"></textarea>
+                </div>
+
+                <div class="review-modal-footer">
+                    <button type="button" id="btn-cancel-review" class="btn btn-ghost btn-sm">CANCEL</button>
+                    <button type="submit" class="btn btn-primary btn-sm">🚀 SUBMIT VERDICT</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>

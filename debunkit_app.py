@@ -9,6 +9,9 @@ from config import config
 from Core.database import (
     db,
     init_db,
+    save_review,
+    get_recent_reviews,
+    Review,
     save_analysis,
     get_analysis_history,
     get_analysis_by_id,
@@ -794,6 +797,56 @@ def api_delete_account():
         logger.error(f"Account deletion error: {e}")
         db.session.rollback()
         return jsonify({"error": "Failed to delete account"}), 500
+
+
+
+# ===== COMMUNITY REVIEWS ENDPOINTS =====
+
+@app.route("/api/reviews", methods=["GET"])
+def get_reviews_endpoint():
+    """Retrieve recent community reviews."""
+    try:
+        reviews = get_recent_reviews(limit=12)
+        return jsonify({
+            "status": "success",
+            "reviews": [r.to_dict() for r in reviews]
+        }), 200
+    except Exception as e:
+        logger.error(f"Error fetching reviews: {e}")
+        return jsonify({"status": "error", "reviews": []}), 500
+
+
+@app.route("/api/reviews", methods=["POST"])
+@limiter.limit("10/minute")
+def submit_review_endpoint():
+    """Submit a community review/testimonial."""
+    try:
+        data = request.get_json(silent=True) or request.form
+        author = (data.get("author") or data.get("author_name") or "").strip()
+        role = (data.get("role") or data.get("author_role") or "Truth Seeker").strip()
+        rating = int(data.get("rating", 5))
+        content = (data.get("content") or "").strip()
+        avatar = data.get("avatar", "⭐")
+
+        if not author or not content:
+            return jsonify({"error": "Author name and review content are required"}), 400
+
+        if len(content) < 5 or len(content) > 500:
+            return jsonify({"error": "Review must be between 5 and 500 characters"}), 400
+
+        review = save_review(author, role, rating, content, avatar)
+        if not review:
+            return jsonify({"error": "Failed to save review"}), 500
+
+        logger.info(f"New community review submitted by {author} ({rating} stars)")
+        return jsonify({
+            "status": "success",
+            "message": "Review submitted successfully!",
+            "review": review.to_dict()
+        }), 201
+    except Exception as e:
+        logger.error(f"Error submitting review: {e}")
+        return jsonify({"error": "Failed to submit review"}), 500
 
 
 # ===== ERROR HANDLERS =====

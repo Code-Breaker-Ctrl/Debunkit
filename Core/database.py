@@ -186,3 +186,51 @@ def clear_old_analyses(days=30):
     except Exception as e:
         logger.error(f"Failed to delete old analyses: {e}")
         return 0
+class Review(db.Model):
+    """
+    Store community reviews and verdicts for DEBUNK.IT.
+    """
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.Integer, primary_key=True)
+    author_name = db.Column(db.String(100), nullable=False)
+    author_role = db.Column(db.String(100), default="Truth Seeker")
+    rating = db.Column(db.Integer, default=5)
+    content = db.Column(db.Text, nullable=False)
+    avatar = db.Column(db.String(20), default="⭐")
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'author_name': self.author_name,
+            'author_role': self.author_role,
+            'rating': self.rating,
+            'content': self.content,
+            'avatar': self.avatar,
+            'timestamp': self.timestamp.strftime("%b %d, %Y") if self.timestamp else None
+        }
+
+def save_review(author_name, author_role, rating, content, avatar="⭐"):
+    try:
+        rev = Review(
+            author_name=author_name.strip()[:100],
+            author_role=author_role.strip()[:100] or "Truth Seeker",
+            rating=max(1, min(5, int(rating))),
+            content=content.strip()[:500],
+            avatar=avatar
+        )
+        db.session.add(rev)
+        db.session.commit()
+        return rev
+    except Exception as e:
+        logger.error(f"Failed to save review: {e}")
+        db.session.rollback()
+        return None
+
+def get_recent_reviews(limit=10):
+    try:
+        return Review.query.order_by(Review.timestamp.desc()).limit(limit).all()
+    except Exception as e:
+        logger.error(f"Failed to retrieve reviews: {e}")
+        return []

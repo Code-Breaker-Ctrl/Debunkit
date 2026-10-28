@@ -588,13 +588,174 @@
     // =========================================================================
     // 7. INITIALIZATION ON DOM READY
     // =========================================================================
+    
+    // =========================================================================
+    // 9. COMMUNITY REVIEWS SYSTEM (Dynamic Submission & Storage)
+    // =========================================================================
+    function initCommunityReviews() {
+        const modalBackdrop = document.getElementById('review-modal-backdrop');
+        const openBtn = document.getElementById('btn-open-review-modal');
+        const closeBtn = document.getElementById('btn-close-review-modal');
+        const cancelBtn = document.getElementById('btn-cancel-review');
+        const form = document.getElementById('community-review-form');
+        const starPicker = document.getElementById('star-picker');
+        const ratingVal = document.getElementById('review-rating-val');
+        const quotesGrid = document.getElementById('quotes-grid');
+
+        // Open / Close Modal
+        function openModal() {
+            if (!modalBackdrop) return;
+            initAudio();
+            modalBackdrop.classList.add('open');
+            modalBackdrop.setAttribute('aria-hidden', 'false');
+            playAnimeChime();
+        }
+
+        function closeModal() {
+            if (!modalBackdrop) return;
+            modalBackdrop.classList.remove('open');
+            modalBackdrop.setAttribute('aria-hidden', 'true');
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', (e) => {
+                if (e.target === modalBackdrop) closeModal();
+            });
+        }
+
+        // Star Picker
+        if (starPicker && ratingVal) {
+            const stars = starPicker.querySelectorAll('.star-pick');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                    ratingVal.value = val;
+                    stars.forEach(s => {
+                        const sVal = parseInt(s.getAttribute('data-val') || '1', 10);
+                        if (sVal <= val) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                    playTone(600 + (val * 90), 'triangle', 0.04, 0.05);
+                });
+            });
+        }
+
+        // Render a Review Card
+        function createReviewCard(author, role, rating, content, isNew = false) {
+            const card = document.createElement('div');
+            card.className = `quote-card ${isNew ? 'new-community-review' : ''}`;
+            const starsStr = '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
+
+            card.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <div class="quote-stars">${starsStr}</div>
+                    <span class="community-verified-badge">✨ VERIFIED</span>
+                </div>
+                <p class="quote-body">"${escapeHtml(content)}"</p>
+                <div class="quote-author">
+                    <div class="author-avatar">⭐</div>
+                    <div class="author-info">
+                        <h4>${escapeHtml(author)}</h4>
+                        <p>${escapeHtml(role)}</p>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        // Load Community Reviews (from localStorage and API)
+        function loadCommunityReviews() {
+            if (!quotesGrid) return;
+
+            // 1. LocalStorage
+            try {
+                const saved = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
+                saved.reverse().forEach(r => {
+                    const card = createReviewCard(r.author, r.role, r.rating, r.content);
+                    quotesGrid.insertBefore(card, quotesGrid.firstChild);
+                });
+            } catch (e) {}
+
+            // 2. Fetch from Backend API
+            fetch('/api/reviews')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.status === 'success' && Array.isArray(data.reviews)) {
+                        data.reviews.forEach(r => {
+                            const card = createReviewCard(r.author_name, r.author_role, r.rating, r.content);
+                            quotesGrid.insertBefore(card, quotesGrid.firstChild);
+                        });
+                    }
+                })
+                .catch(() => {});
+        }
+
+        loadCommunityReviews();
+
+        // Form Submit
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const authorInput = document.getElementById('review-author');
+                const roleInput = document.getElementById('review-role');
+                const contentInput = document.getElementById('review-content');
+
+                const author = authorInput ? authorInput.value.trim() : '';
+                const role = roleInput ? roleInput.value.trim() : 'Truth Seeker';
+                const content = contentInput ? contentInput.value.trim() : '';
+                const rating = parseInt(ratingVal ? ratingVal.value : '5', 10);
+
+                if (!author || !content) return;
+
+                // 1. Prepend to DOM immediately
+                if (quotesGrid) {
+                    const newCard = createReviewCard(author, role, rating, content, true);
+                    quotesGrid.insertBefore(newCard, quotesGrid.firstChild);
+                    newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                // 2. Save in localStorage
+                try {
+                    const existing = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
+                    existing.push({ author, role, rating, content, date: new Date().toISOString() });
+                    localStorage.setItem('debunkit_community_reviews', JSON.stringify(existing));
+                } catch (e) {}
+
+                // 3. POST to /api/reviews
+                fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author, role, rating, content })
+                }).catch(() => {});
+
+                // 4. Anime fanfare & feedback
+                playAnimeVictoryFanfare();
+                showLandingToast('✨ Arigato! Your review was recorded to the community wall.');
+                closeModal();
+                form.reset();
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         // Setup SFX Toggle Button
         const sfxBtn = document.getElementById('sfx-toggle-btn');
         if (sfxBtn) {
             if (sfxEnabled) {
                 sfxBtn.classList.add('active');
-                sfxBtn.innerHTML = '🔊 SFX: ON';
+                sfxBtn.innerHTML = '✨ ANIME SFX: ON';
             } else {
                 sfxBtn.classList.remove('active');
                 sfxBtn.innerHTML = '🔇 SFX: OFF';
@@ -606,9 +767,9 @@
                 localStorage.setItem('debunkit_sfx', sfxEnabled ? 'on' : 'off');
                 if (sfxEnabled) {
                     sfxBtn.classList.add('active');
-                    sfxBtn.innerHTML = '🔊 SFX: ON';
+                    sfxBtn.innerHTML = '✨ ANIME SFX: ON';
                     playSuccessChime();
-                    showLandingToast('Audio effects enabled! Prepare your eardrums for truth.');
+                    showLandingToast('✨ Anime SFX activated! 🎌 Power up your sound.');
                 } else {
                     sfxBtn.classList.remove('active');
                     sfxBtn.innerHTML = '🔇 SFX: OFF';
@@ -678,6 +839,9 @@
 
         // Setup Counters
         initCounters();
+
+        // Setup Community Reviews
+        initCommunityReviews();
 
         // Setup Easter Egg
         initEasterEgg();
