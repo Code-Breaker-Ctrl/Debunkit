@@ -442,6 +442,89 @@
     }
 
     // =========================================================================
+    // 8. CRAZY INTERACTIVE TITLE: CYBER ENTRANCE DECODE & 3D ROAM TILT
+    // =========================================================================
+    function initCrazyTitle() {
+        const titleWrap = document.querySelector('.hero-crazy-title-wrap');
+        const titleEl = document.querySelector('.hero-crazy-title');
+        const debunkEl = document.querySelector('.title-debunk');
+        const itEl = document.querySelector('.title-it');
+        if (!titleWrap || !titleEl || !debunkEl || !itEl) return;
+
+        // 1. Entrance Cyber Hacker Decoder
+        const glyphs = '!#@$%&*?<>{}[]/\\+=~01';
+        const originalDebunk = debunkEl.textContent.trim();
+        const originalIt = itEl.textContent.trim();
+
+        let frame = 0;
+        const totalFrames = 16;
+        const decodeInterval = setInterval(() => {
+            frame++;
+            const progress = frame / totalFrames;
+
+            // Scramble DEBUNK
+            const debunkChars = originalDebunk.split('').map((char, index) => {
+                if (index / originalDebunk.length < progress) {
+                    return char;
+                }
+                return glyphs[Math.floor(Math.random() * glyphs.length)];
+            }).join('');
+            debunkEl.textContent = debunkChars;
+
+            // Scramble IT
+            const itChars = originalIt.split('').map((char, index) => {
+                if (index / originalIt.length < progress) {
+                    return char;
+                }
+                return glyphs[Math.floor(Math.random() * glyphs.length)];
+            }).join('');
+            itEl.textContent = itChars;
+
+            if (frame >= totalFrames) {
+                clearInterval(decodeInterval);
+                debunkEl.textContent = originalDebunk;
+                itEl.textContent = originalIt;
+                titleEl.classList.add('decoded');
+            }
+        }, 28);
+
+        // 2. Interactive Roaming Mouse Track & 3D Tilt
+        let sfxThrottle = null;
+        titleWrap.addEventListener('mousemove', (e) => {
+            const rect = titleWrap.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            // Normalized tilt angles (-14deg to +14deg)
+            const tiltY = ((mouseX - centerX) / centerX) * 14;
+            const tiltX = -((mouseY - centerY) / centerY) * 14;
+
+            // Dynamic text-shadow offset
+            const shadowX = (tiltY * 1.5).toFixed(1);
+            const shadowY = (-tiltX * 1.5).toFixed(1);
+
+            titleEl.style.transform = `perspective(700px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale3d(1.05, 1.05, 1.05)`;
+            titleEl.style.textShadow = `${shadowX}px ${shadowY}px 0 rgba(255, 71, 87, 0.75), ${-shadowX}px ${-shadowY}px 0 rgba(0, 240, 255, 0.75), 0 0 35px rgba(255, 215, 0, 0.65)`;
+
+            // Subtle cyber roaming blip if SFX is on
+            if (!sfxThrottle) {
+                sfxThrottle = setTimeout(() => {
+                    playTone(320 + Math.random() * 260, 'triangle', 0.035, 0.03, 0.001);
+                    sfxThrottle = null;
+                }, 85);
+            }
+        });
+
+        titleWrap.addEventListener('mouseleave', () => {
+            titleEl.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+            titleEl.style.textShadow = 'none';
+        });
+    }
+
+    // =========================================================================
     // 7. INITIALIZATION ON DOM READY
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
@@ -537,6 +620,9 @@
 
         // Setup Easter Egg
         initEasterEgg();
+
+        // Setup Crazy Title Cyber Decode & 3D Tilt
+        initCrazyTitle();
 
         // Audio activation on first click anywhere
         document.body.addEventListener('click', () => {
