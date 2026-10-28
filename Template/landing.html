@@ -117,13 +117,20 @@
         <!-- ================================================================= -->
         <header class="hero-section">
             <div class="hero-pill-badge">
-                <span>⚡</span> AI-POWERED MISINFORMATION RADAR // COHERE + LIVE RAG
+                <span class="bolt-icon">⚡</span> THE OFFICIAL BULLSHIT DETECTOR // REAL-TIME TRUTH RADAR
             </div>
 
-            <h1 class="hero-title">
+            <div class="hero-crazy-title-wrap">
+                <h1 class="hero-crazy-title">
+                    <span class="title-debunk">DEBUNK</span><span class="title-dot">.</span><span class="title-it">IT</span>
+                </h1>
+                <div class="hero-crazy-glow" aria-hidden="true"></div>
+            </div>
+
+            <h2 class="hero-subtitle-punch">
                 THE INTERNET IS 94% <span class="highlight-gold">BULLSHIT</span>.<br>
                 WE BUILT THE <span class="highlight-cyan">RADAR</span>.
-            </h1>
+            </h2>
 
             <p class="hero-subtitle">
                 Before you drink boiled onion water, liquidate your 401(k) for <em>ElonMarsCoin</em>,
@@ -550,14 +557,20 @@
             </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- FOOTER                                                            -->
-        <!-- ================================================================= -->
-        <footer class="landing-footer">
+    </div><!-- Close .landing-shell -->
+
+    <!-- ================================================================= -->
+    <!-- FOOTER (Full-Width Edge-to-Edge)                                  -->
+    <!-- ================================================================= -->
+    <footer class="landing-footer">
+        <div class="footer-container">
             <div class="footer-top">
                 <div class="footer-brand">
                     <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
-                    <span>DEBUNK.IT // TRUTH SYSTEM v3.8</span>
+                    <div>
+                        <div class="footer-brand-title">DEBUNK.IT</div>
+                        <div class="footer-brand-tagline">The Internet's Bullshit Radar v3.8</div>
+                    </div>
                 </div>
 
                 <ul class="footer-links">
@@ -574,13 +587,12 @@
                     &copy; 2026 DEBUNK.IT. Built to incinerate misinformation. All rights reserved.
                 </div>
                 <div class="footer-disclaimer">
-                    Disclaimer: No pigeons or microwaves were harmed during the development of this platform.
+                    Disclaimer: No pigeons or microwaves were harmed during testing.
                     Always consult real doctors rather than WhatsApp forwards.
                 </div>
             </div>
-        </footer>
-
-    </div>
+        </div>
+    </footer>
 
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
