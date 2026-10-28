@@ -95,9 +95,9 @@
     const VIRAL_PRESETS = [
         {
             id: 'garlic',
-            btnText: '🧄 Garlic Cures Loans',
+            btnText: 'Garlic & Student Debt',
             claim: 'Drinking boiled garlic water cures student loans and 5G radiation.',
-            verdict: '100% PURE CAP 🚨',
+            verdict: '100% PURE CAP',
             score: '99.9%',
             tone: 'danger',
             angle: 78,
@@ -108,9 +108,9 @@
         },
         {
             id: 'microwave',
-            btnText: '📱 Microwave Fast-Charge',
+            btnText: 'Microwave Fast-Charge',
             claim: 'Putting your iPhone in the microwave for 30 seconds supercharges the battery to 100%.',
-            verdict: 'CRITICAL BRAIN DAMAGE 💥',
+            verdict: 'HAZARDOUS BOGUS',
             score: '100%',
             tone: 'danger',
             angle: 80,
@@ -121,9 +121,9 @@
         },
         {
             id: 'aliens',
-            btnText: '🛸 Pyramids Alien Wi-Fi',
+            btnText: 'Pyramids Alien Wi-Fi',
             claim: 'The Egyptian pyramids were ancient wireless power transmitters built by extraterrestrials.',
-            verdict: '99.8% UNHINGED SUS 🛸',
+            verdict: '99.8% UNHINGED SUS',
             score: '99.8%',
             tone: 'danger',
             angle: 75,
@@ -134,9 +134,9 @@
         },
         {
             id: 'avocado',
-            btnText: '🥑 Avocado 5G Armor',
+            btnText: 'Avocado 5G Shield',
             claim: 'Eating ground avocado pits makes the human body immune to electromagnetic Wi-Fi signals.',
-            verdict: '96.4% ORGANIC NONSENSE 🥑',
+            verdict: '96.4% NONSENSE',
             score: '96.4%',
             tone: 'danger',
             angle: 70,
@@ -147,9 +147,9 @@
         },
         {
             id: 'ai-laundry',
-            btnText: '🤖 AI Laundry Conspiracy',
+            btnText: 'AI Laundry Conspiracy',
             claim: 'AI models have secretly agreed to automate all laundry and fold clothes by next Tuesday.',
-            verdict: '50% DELUSIONAL WISH 🤖',
+            verdict: 'DELUSIONAL WISH',
             score: '50.0%',
             tone: 'sus',
             angle: 0,
@@ -160,9 +160,9 @@
         },
         {
             id: 'water',
-            btnText: '💧 Water Hydrates Humans',
+            btnText: 'Water Hydrates Humans',
             claim: 'Drinking clean fresh water is necessary for human hydration and organ function.',
-            verdict: '100% SHOCKINGLY REAL ✅',
+            verdict: '100% VERIFIED REAL',
             score: '0.1%',
             tone: 'legit',
             angle: -78,
@@ -262,7 +262,7 @@
         // Check against known funny patterns
         let scoreVal = 85;
         let angleVal = 55;
-        let verdictVal = 'HIGH SUSPICION 🚨';
+        let verdictVal = 'HIGH SUSPICION';
         let readoutVal = 'PROBABLE BOGUS';
         let toneVal = 'danger';
         let diagVal = 'Our heuristic filters detected multiple classic internet red flags. This claim shows strong traces of unverified rumor dynamics.';
@@ -270,28 +270,28 @@
         if (clean.includes('water') && (clean.includes('drink') || clean.includes('hydrate'))) {
             scoreVal = 0.5;
             angleVal = -75;
-            verdictVal = 'VERIFIED ACCURATE ✅';
+            verdictVal = 'VERIFIED ACCURATE';
             readoutVal = 'SOLID TRUTH';
             toneVal = 'legit';
             diagVal = 'Hydration and water science checks out. Biological reality confirmed.';
         } else if (clean.includes('alien') || clean.includes('ufo') || clean.includes('reptilian') || clean.includes('flat earth')) {
             scoreVal = 99.8;
             angleVal = 78;
-            verdictVal = 'TERMINAL CONSPIRACY 🛸';
+            verdictVal = 'TERMINAL CONSPIRACY';
             readoutVal = 'UNHINGED PARANOIA';
             toneVal = 'danger';
             diagVal = 'Tin foil hat alert! This hypothesis relies heavily on unverified claims, secret shadow leagues, and late-night message board lore.';
         } else if (clean.includes('cure') || clean.includes('miracle') || clean.includes('garlic') || clean.includes('lemon') || clean.includes('5g')) {
             scoreVal = 97.5;
             angleVal = 72;
-            verdictVal = 'FAMILY FORWARD CAP 🧄';
+            verdictVal = 'FAMILY FORWARD CAP';
             readoutVal = 'WHATSAPP ENERGY';
             toneVal = 'danger';
             diagVal = 'Strong indicators of unverified miracle wellness claims. Real medicine usually requires peer-reviewed trials, not forwarded JPEG memes.';
         } else if (clean.includes('crypto') || clean.includes('elon') || clean.includes('100x') || clean.includes('guaranteed profit')) {
             scoreVal = 99.1;
             angleVal = 76;
-            verdictVal = 'FINANCIAL RUGPULL 💸';
+            verdictVal = 'FINANCIAL RUGPULL';
             readoutVal = '100% BOGUS PROPHECY';
             toneVal = 'danger';
             diagVal = 'Sirens are blaring in the finance division. Guaranteed returns with astronomical multipliers are the oldest scam on the internet.';
@@ -655,11 +655,11 @@
             card.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div class="quote-stars">${starsStr}</div>
-                    <span class="community-verified-badge">✨ VERIFIED</span>
+                    <span class="community-verified-badge">VERIFIED</span>
                 </div>
                 <p class="quote-body">"${escapeHtml(content)}"</p>
                 <div class="quote-author">
-                    <div class="author-avatar">⭐</div>
+                    <div class="author-avatar avatar-comm">${escapeHtml(author.slice(0, 2).toUpperCase())}</div>
                     <div class="author-info">
                         <h4>${escapeHtml(author)}</h4>
                         <p>${escapeHtml(role)}</p>

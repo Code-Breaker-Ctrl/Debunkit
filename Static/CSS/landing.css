@@ -1964,3 +1964,118 @@ html[data-theme="light"] .brand-text h1 {
     border-radius: var(--radius-full);
     margin-left: auto;
 }
+
+/* ==========================================================================
+   PRACTICAL MODERN TECH ICONS & MONOGRAM AVATARS
+   ========================================================================== */
+
+/* Live Ticker Beacon */
+.ticker-beacon {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    display: inline-block;
+    animation: beacon-blink 1.2s infinite;
+}
+
+@keyframes beacon-blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+/* Badge Indicator Dots */
+.badge-dot-live {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    display: inline-block;
+    box-shadow: 0 0 8px var(--accent-gold);
+}
+
+.badge-indicator-red {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-red);
+    display: inline-block;
+}
+
+.badge-indicator-cyan {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    display: inline-block;
+}
+
+/* Badge SVGs */
+.badge-svg {
+    stroke: var(--accent-cyan);
+    flex-shrink: 0;
+}
+
+/* Button Arrows */
+.btn-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+/* Dossier Case Badges */
+.dossier-icon-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 850;
+    color: var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.5px;
+}
+
+/* Monogram User Avatars */
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.author-avatar.avatar-tm {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.3));
+    color: var(--accent-gold);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.author-avatar.avatar-ms {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(112, 161, 255, 0.3));
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+}
+
+.author-avatar.avatar-ak {
+    background: linear-gradient(135deg, rgba(40, 199, 111, 0.2), rgba(0, 210, 211, 0.3));
+    color: var(--accent-green);
+    border: 1px solid rgba(40, 199, 111, 0.4);
+}
+
+.author-avatar.avatar-comm {
+    background: linear-gradient(135deg, rgba(162, 155, 254, 0.2), rgba(108, 92, 231, 0.3));
+    color: #a29bfe;
+    border: 1px solid rgba(162, 155, 254, 0.4);
+}
