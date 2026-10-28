@@ -442,82 +442,147 @@
     }
 
     // =========================================================================
-    // 8. CRAZY INTERACTIVE TITLE: 1.8s VISIBLE CYBER DECODE & WAVE HOVER
+    // 8. CRAZY INTERACTIVE TITLE: VISIBLE 1.8s CYBER DECODE & ZERO-LAG ROAM
     // =========================================================================
     function initCrazyTitle() {
+        const debunkEl = document.getElementById('decode-debunk');
+        const itEl = document.getElementById('decode-it');
         const titleEl = document.getElementById('hero-crazy-title');
-        const charElements = document.querySelectorAll('.char-spark');
-        if (!titleEl || !charElements.length) return;
+        const titleWrap = document.getElementById('hero-title-wrap');
+        if (!debunkEl || !itEl || !titleEl) return;
 
-        const glyphs = '!#@$%&*?<>01XYZ_~+=';
-        const targetWord = Array.from(charElements).map(el => el.getAttribute('data-char') || el.textContent);
-        
-        // 1. Visible 1.8-Second Cyber Decoder Entrance
-        // Each character solves rhythmically so visitors clearly see the decoding in action
-        let solvedCount = 0;
-        const totalChars = charElements.length;
-        const solveDelay = 200; // 200ms per character = ~1.6s total
+        const targetDebunk = 'DEBUNK';
+        const targetIt = 'IT';
+        const glyphs = ['!', '#', '@', '$', '%', '&', '*', '?', '<', '>', '0', '1', 'X', 'Y', 'Z', '_', '~', '+', '='];
 
-        // Fast glyph scramble timer (runs every 45ms)
-        const scrambleInterval = setInterval(() => {
-            charElements.forEach((el, index) => {
-                if (index < solvedCount) {
-                    el.textContent = targetWord[index];
-                    el.classList.add('locked');
-                    el.classList.remove('decoding');
+        let isDecoding = true;
+        let debunkSolved = 0; // 0 to 6
+        let itSolved = 0;     // 0 to 2
+
+        function getScrambled(target, solvedCount) {
+            let res = '';
+            for (let i = 0; i < target.length; i++) {
+                if (i < solvedCount) {
+                    res += target[i];
                 } else {
-                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                    el.classList.add('decoding');
-                    el.classList.remove('locked');
+                    res += glyphs[Math.floor(Math.random() * glyphs.length)];
                 }
-            });
+            }
+            return res;
+        }
+
+        // Fast glyph scramble timer (runs every 45ms to shuffle unsolved letters)
+        const scrambleInterval = setInterval(() => {
+            if (debunkSolved < targetDebunk.length) {
+                debunkEl.textContent = getScrambled(targetDebunk, debunkSolved);
+            } else {
+                debunkEl.textContent = targetDebunk;
+            }
+
+            if (itSolved < targetIt.length) {
+                itEl.textContent = getScrambled(targetIt, itSolved);
+            } else {
+                itEl.textContent = targetIt;
+            }
         }, 45);
 
-        // Character lock-in timer: solves one character every 200ms
+        // Visible rhythmic solver (reveals 1 letter every 200ms = 1.8s total)
+        let step = 0;
         const solverInterval = setInterval(() => {
-            if (solvedCount < totalChars) {
-                const lockedEl = charElements[solvedCount];
-                if (lockedEl) {
-                    lockedEl.textContent = targetWord[solvedCount];
-                    lockedEl.classList.add('locked');
-                    lockedEl.classList.remove('decoding');
-                    playTone(650 + (solvedCount * 90), 'sine', 0.035, 0.04);
-                }
-                solvedCount++;
+            step++;
+            if (step <= 6) {
+                debunkSolved = step;
+                debunkEl.textContent = getScrambled(targetDebunk, debunkSolved);
+                playTone(520 + (step * 85), 'sine', 0.035, 0.04);
+            } else if (step === 7) {
+                itSolved = 1;
+                itEl.textContent = getScrambled(targetIt, itSolved);
+                playTone(1050, 'sine', 0.035, 0.04);
+            } else if (step === 8) {
+                itSolved = 2;
+                itEl.textContent = targetIt;
+                playTone(1200, 'sine', 0.035, 0.04);
             } else {
+                // Done!
                 clearInterval(solverInterval);
                 clearInterval(scrambleInterval);
-
-                // Final all-locked verification flash
-                charElements.forEach((el, index) => {
-                    el.textContent = targetWord[index];
-                    el.classList.remove('decoding');
-                    el.classList.add('locked');
-                });
+                debunkEl.textContent = targetDebunk;
+                itEl.textContent = targetIt;
+                isDecoding = false;
                 titleEl.classList.add('all-decoded');
-                playTone(1046.50, 'triangle', 0.15, 0.06); // High C chime
+                playTone(1046.50, 'triangle', 0.2, 0.08); // High C triumph chime
             }
-        }, solveDelay);
+        }, 200);
 
-        // 2. Interactive Letter Wave on Cursor Roam (Buttery Smooth 60FPS GPU)
-        charElements.forEach((charEl, idx) => {
-            charEl.addEventListener('mouseenter', () => {
-                charEl.classList.add('hover-active');
+        // Interactive Letter Glitch & Audio Wave on Cursor Roam (Zero Lag, 60fps)
+        let lastGlitchTime = 0;
+        function glitchChar(el, word, charIdx) {
+            const chars = word.split('');
+            chars[charIdx] = glyphs[Math.floor(Math.random() * glyphs.length)];
+            el.textContent = chars.join('');
+            setTimeout(() => {
+                el.textContent = word;
+            }, 90);
+        }
 
-                // Wave effect on adjacent neighbors
-                if (charElements[idx - 1]) charElements[idx - 1].classList.add('adjacent');
-                if (charElements[idx + 1]) charElements[idx + 1].classList.add('adjacent');
+        debunkEl.addEventListener('mousemove', (e) => {
+            if (isDecoding) return;
+            const now = Date.now();
+            if (now - lastGlitchTime < 65) return;
+            lastGlitchTime = now;
 
-                // Subtle audio tick
-                playTone(420 + (idx * 60), 'triangle', 0.03, 0.035);
-            });
-
-            charEl.addEventListener('mouseleave', () => {
-                charEl.classList.remove('hover-active');
-                if (charElements[idx - 1]) charElements[idx - 1].classList.remove('adjacent');
-                if (charElements[idx + 1]) charElements[idx + 1].classList.remove('adjacent');
-            });
+            const rect = debunkEl.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(0.999, (e.clientX - rect.left) / rect.width));
+            const idx = Math.floor(ratio * 6);
+            glitchChar(debunkEl, targetDebunk, idx);
+            playTone(460 + (idx * 50), 'triangle', 0.02, 0.03);
         });
+
+        debunkEl.addEventListener('mouseleave', () => {
+            if (!isDecoding) debunkEl.textContent = targetDebunk;
+        });
+
+        itEl.addEventListener('mousemove', (e) => {
+            if (isDecoding) return;
+            const now = Date.now();
+            if (now - lastGlitchTime < 65) return;
+            lastGlitchTime = now;
+
+            const rect = itEl.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(0.999, (e.clientX - rect.left) / rect.width));
+            const idx = Math.floor(ratio * 2);
+            glitchChar(itEl, targetIt, idx);
+            playTone(760 + (idx * 90), 'triangle', 0.02, 0.03);
+        });
+
+        itEl.addEventListener('mouseleave', () => {
+            if (!isDecoding) itEl.textContent = targetIt;
+        });
+
+        // Click to trigger Reality Check Rapid Re-Scan (400ms burst)
+        if (titleWrap) {
+            titleWrap.addEventListener('click', () => {
+                if (isDecoding) return;
+                isDecoding = true;
+                playRadarPing();
+                let burstCount = 0;
+                const burstInterval = setInterval(() => {
+                    burstCount++;
+                    debunkEl.textContent = getScrambled(targetDebunk, 0);
+                    itEl.textContent = getScrambled(targetIt, 0);
+                    if (burstCount > 7) {
+                        clearInterval(burstInterval);
+                        debunkEl.textContent = targetDebunk;
+                        itEl.textContent = targetIt;
+                        isDecoding = false;
+                        titleEl.classList.remove('all-decoded');
+                        void titleEl.offsetWidth; // Force reflow
+                        titleEl.classList.add('all-decoded');
+                        playTone(1046.50, 'triangle', 0.15, 0.06);
+                    }
+                }, 50);
+            });
+        }
     }
 
     // =========================================================================
