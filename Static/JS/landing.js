@@ -7,65 +7,10 @@
     'use strict';
 
     // =========================================================================
-    // 1. SOUND FX ENGINE (AUTHENTIC AUDIO ASSETS + SYNTHETIC FALLBACK)
+    // 1. SOUND FX ENGINE (READY FOR CUSTOM SFX FILES)
     // =========================================================================
     let audioCtx = null;
     let sfxEnabled = localStorage.getItem('debunkit_sfx') === 'on';
-
-    // Base path injected from template or defaulting to /Static/Audio/
-    const AUDIO_BASE_PATH = (window.DEBUNKIT_AUDIO_PATH || '/Static/Audio/').replace(/\/+$/, '') + '/';
-
-    const AUDIO_REGISTRY = {
-        nani: { file: 'nani.mp3', vol: 0.8 },
-        wow: { file: 'anime-wow.mp3', vol: 0.75 },
-        teleport: { file: 'teleport.mp3', vol: 0.7 },
-        ultraInstinct: { file: 'ultra-instinct.mp3', vol: 0.55 },
-        hit: { file: 'hit.mp3', vol: 0.45 },
-        chime: { file: 'chime.mp3', vol: 0.6 }
-    };
-
-    const loadedAudioInstances = {};
-
-    function getAudioInstance(name) {
-        if (!AUDIO_REGISTRY[name]) return null;
-        if (!loadedAudioInstances[name]) {
-            try {
-                const aud = new Audio(AUDIO_BASE_PATH + AUDIO_REGISTRY[name].file);
-                aud.volume = AUDIO_REGISTRY[name].vol;
-                aud.preload = 'auto';
-                loadedAudioInstances[name] = aud;
-            } catch (e) {
-                return null;
-            }
-        }
-        return loadedAudioInstances[name];
-    }
-
-    function playAudioClip(name, maxDurationMs = null) {
-        if (!sfxEnabled) return false;
-        try {
-            const aud = getAudioInstance(name);
-            if (!aud) return false;
-            aud.currentTime = 0;
-            const p = aud.play();
-            if (p && typeof p.catch === 'function') {
-                p.catch(() => {});
-            }
-            if (maxDurationMs) {
-                setTimeout(() => {
-                    try {
-                        if (!aud.paused) {
-                            aud.pause();
-                            aud.currentTime = 0;
-                        }
-                    } catch (e) {}
-                }, maxDurationMs);
-            }
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
 
     function initAudio() {
         if (!audioCtx) {
@@ -76,9 +21,6 @@
         }
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
-        }
-        if (sfxEnabled) {
-            Object.keys(AUDIO_REGISTRY).forEach(name => getAudioInstance(name));
         }
     }
 
@@ -104,76 +46,62 @@
         }
     }
 
-    // Sound: Cap / Buzzer (Iconic Anime "NANI?!" voice)
+    // Sound: Cap / Buzzer (Descending Sawtooth)
     function playBuzzer() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('nani')) {
-            try {
-                if (!audioCtx) return;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
-                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.35);
-            } catch (e) {}
-        }
+        if (!sfxEnabled || !audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+
+            osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
+
+            gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.35);
+        } catch (e) {}
     }
 
-    // Sound: Legit / Verified (Iconic Kawaii "WAAW!" sparkle)
+    // Sound: Legit / Verified (Ascending Triad)
     function playSuccessChime() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('wow')) {
-            const notes = [523.25, 659.25, 783.99, 1046.50];
-            notes.forEach((freq, idx) => {
-                setTimeout(() => {
-                    playTone(freq, 'sine', 0.2, 0.12, 0.001);
-                }, idx * 60);
-            });
-        }
+        if (!sfxEnabled || !audioCtx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+            setTimeout(() => {
+                playTone(freq, 'sine', 0.2, 0.12, 0.001);
+            }, idx * 60);
+        });
     }
 
-    // Sound: Instant Transmission / Teleport Whoosh
+    // Sound: Radar Ping
     function playRadarPing() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('teleport')) {
-            playTone(1800, 'sine', 0.12, 0.08, 0.001);
-        }
+        playTone(1800, 'sine', 0.12, 0.08, 0.001);
     }
 
-    // Sound: Crisp UI Click / Hit Marker
+    // Sound: Button Click
     function playClick() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('hit')) {
-            playTone(800, 'triangle', 0.04, 0.05, 0.001);
-        }
+        playTone(800, 'triangle', 0.04, 0.05, 0.001);
     }
 
-    // Sound: Triumph Chime
+    // Sound: Modal / Level-up Chime
     function playAnimeChime() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('chime')) {
-            playTone(1046.50, 'triangle', 0.15, 0.06);
-        }
+        playTone(1046.50, 'triangle', 0.15, 0.06);
     }
 
-    // Sound: Review / Community Victory Fanfare
+    // Sound: Review / Victory Fanfare
     function playAnimeVictoryFanfare() {
-        if (!sfxEnabled) return;
-        if (!playAudioClip('wow')) {
-            playSuccessChime();
-        }
+        playSuccessChime();
     }
 
-    // Sound: Dramatic Ultra Instinct Riff (Title Rescan easter egg)
+    // Sound: Rapid Rescan Completion
     function playUltraInstinct() {
-        if (!sfxEnabled) return;
-        playAudioClip('ultraInstinct', 3200);
+        playTone(1046.50, 'triangle', 0.15, 0.06);
     }
 
     // =========================================================================
@@ -182,9 +110,9 @@
     const VIRAL_PRESETS = [
         {
             id: 'garlic',
-            btnText: 'Garlic & Student Debt',
+            btnText: '🧄 Garlic Cures Loans',
             claim: 'Drinking boiled garlic water cures student loans and 5G radiation.',
-            verdict: '100% PURE CAP',
+            verdict: '100% PURE CAP 🚨',
             score: '99.9%',
             tone: 'danger',
             angle: 78,
@@ -195,9 +123,9 @@
         },
         {
             id: 'microwave',
-            btnText: 'Microwave Fast-Charge',
+            btnText: '📱 Microwave Fast-Charge',
             claim: 'Putting your iPhone in the microwave for 30 seconds supercharges the battery to 100%.',
-            verdict: 'HAZARDOUS BOGUS',
+            verdict: 'CRITICAL BRAIN DAMAGE 💥',
             score: '100%',
             tone: 'danger',
             angle: 80,
@@ -208,9 +136,9 @@
         },
         {
             id: 'aliens',
-            btnText: 'Pyramids Alien Wi-Fi',
+            btnText: '🛸 Pyramids Alien Wi-Fi',
             claim: 'The Egyptian pyramids were ancient wireless power transmitters built by extraterrestrials.',
-            verdict: '99.8% UNHINGED SUS',
+            verdict: '99.8% UNHINGED SUS 🛸',
             score: '99.8%',
             tone: 'danger',
             angle: 75,
@@ -221,9 +149,9 @@
         },
         {
             id: 'avocado',
-            btnText: 'Avocado 5G Shield',
+            btnText: '🥑 Avocado 5G Armor',
             claim: 'Eating ground avocado pits makes the human body immune to electromagnetic Wi-Fi signals.',
-            verdict: '96.4% NONSENSE',
+            verdict: '96.4% ORGANIC NONSENSE 🥑',
             score: '96.4%',
             tone: 'danger',
             angle: 70,
@@ -234,9 +162,9 @@
         },
         {
             id: 'ai-laundry',
-            btnText: 'AI Laundry Conspiracy',
+            btnText: '🤖 AI Laundry Conspiracy',
             claim: 'AI models have secretly agreed to automate all laundry and fold clothes by next Tuesday.',
-            verdict: 'DELUSIONAL WISH',
+            verdict: '50% DELUSIONAL WISH 🤖',
             score: '50.0%',
             tone: 'sus',
             angle: 0,
@@ -247,9 +175,9 @@
         },
         {
             id: 'water',
-            btnText: 'Water Hydrates Humans',
+            btnText: '💧 Water Hydrates Humans',
             claim: 'Drinking clean fresh water is necessary for human hydration and organ function.',
-            verdict: '100% VERIFIED REAL',
+            verdict: '100% SHOCKINGLY REAL ✅',
             score: '0.1%',
             tone: 'legit',
             angle: -78,
@@ -349,7 +277,7 @@
         // Check against known funny patterns
         let scoreVal = 85;
         let angleVal = 55;
-        let verdictVal = 'HIGH SUSPICION';
+        let verdictVal = 'HIGH SUSPICION 🚨';
         let readoutVal = 'PROBABLE BOGUS';
         let toneVal = 'danger';
         let diagVal = 'Our heuristic filters detected multiple classic internet red flags. This claim shows strong traces of unverified rumor dynamics.';
@@ -357,28 +285,28 @@
         if (clean.includes('water') && (clean.includes('drink') || clean.includes('hydrate'))) {
             scoreVal = 0.5;
             angleVal = -75;
-            verdictVal = 'VERIFIED ACCURATE';
+            verdictVal = 'VERIFIED ACCURATE ✅';
             readoutVal = 'SOLID TRUTH';
             toneVal = 'legit';
             diagVal = 'Hydration and water science checks out. Biological reality confirmed.';
         } else if (clean.includes('alien') || clean.includes('ufo') || clean.includes('reptilian') || clean.includes('flat earth')) {
             scoreVal = 99.8;
             angleVal = 78;
-            verdictVal = 'TERMINAL CONSPIRACY';
+            verdictVal = 'TERMINAL CONSPIRACY 🛸';
             readoutVal = 'UNHINGED PARANOIA';
             toneVal = 'danger';
             diagVal = 'Tin foil hat alert! This hypothesis relies heavily on unverified claims, secret shadow leagues, and late-night message board lore.';
         } else if (clean.includes('cure') || clean.includes('miracle') || clean.includes('garlic') || clean.includes('lemon') || clean.includes('5g')) {
             scoreVal = 97.5;
             angleVal = 72;
-            verdictVal = 'FAMILY FORWARD CAP';
+            verdictVal = 'FAMILY FORWARD CAP 🧄';
             readoutVal = 'WHATSAPP ENERGY';
             toneVal = 'danger';
             diagVal = 'Strong indicators of unverified miracle wellness claims. Real medicine usually requires peer-reviewed trials, not forwarded JPEG memes.';
         } else if (clean.includes('crypto') || clean.includes('elon') || clean.includes('100x') || clean.includes('guaranteed profit')) {
             scoreVal = 99.1;
             angleVal = 76;
-            verdictVal = 'FINANCIAL RUGPULL';
+            verdictVal = 'FINANCIAL RUGPULL 💸';
             readoutVal = '100% BOGUS PROPHECY';
             toneVal = 'danger';
             diagVal = 'Sirens are blaring in the finance division. Guaranteed returns with astronomical multipliers are the oldest scam on the internet.';
@@ -742,11 +670,11 @@
             card.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div class="quote-stars">${starsStr}</div>
-                    <span class="community-verified-badge">VERIFIED</span>
+                    <span class="community-verified-badge">✨ VERIFIED</span>
                 </div>
                 <p class="quote-body">"${escapeHtml(content)}"</p>
                 <div class="quote-author">
-                    <div class="author-avatar avatar-comm">${escapeHtml(author.slice(0, 2).toUpperCase())}</div>
+                    <div class="author-avatar">⭐</div>
                     <div class="author-info">
                         <h4>${escapeHtml(author)}</h4>
                         <p>${escapeHtml(role)}</p>
