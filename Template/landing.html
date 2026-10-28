@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'dark' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>DEBUNK.IT | The Internet is 94% Bullshit. We Built The Radar.</title>
+
+    <meta name="description" content="DEBUNK.IT is an AI-powered misinformation detection engine that uses live RAG web search, Cohere LLM reasoning, and ML classifiers to roast fake news and verify claims.">
+    <meta property="og:title" content="DEBUNK.IT | Misinformation Intelligence Radar">
+    <meta property="og:description" content="Stop getting your medical and financial advice from WhatsApp forwards. Instant truth checks with cited receipts.">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/landing.css') }}">
+</head>
+
+<body>
+    <!-- Background Canvas Layer -->
+    <canvas id="canvas-bg" aria-hidden="true"></canvas>
+
+    <!-- Ambient Glow Blobs -->
+    <div class="ambient-glow ambient-glow-1"></div>
+    <div class="ambient-glow ambient-glow-2"></div>
+    <div class="ambient-glow ambient-glow-3"></div>
+
+    <!-- Cyber Grid Overlay -->
+    <div class="cyber-grid" aria-hidden="true"></div>
+
+    <div class="landing-shell">
+
+        <!-- ================================================================= -->
+        <!-- NAVIGATION                                                        -->
+        <!-- ================================================================= -->
+        <nav class="landing-nav">
+            <div class="nav-container">
+                <a href="/" class="brand-wrapper" title="DEBUNK.IT Home">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+                    <div class="brand-text">
+                        <h1>DEBUNK.IT</h1>
+                        <span class="brand-pill"><span class="pulse-dot"></span> RADAR ACTIVE</span>
+                    </div>
+                </a>
+
+                <ul class="nav-links">
+                    <li><a href="#meter" class="nav-link">BS-O-METER</a></li>
+                    <li><a href="#shame" class="nav-link">HALL OF SHAME</a></li>
+                    <li><a href="#engine" class="nav-link">HOW IT WORKS</a></li>
+                    <li><a href="#telemetry" class="nav-link">TELEMETRY</a></li>
+                    <li><a href="#reviews" class="nav-link">TESTIMONIALS</a></li>
+                </ul>
+
+                <div class="nav-actions">
+                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle 8-Bit Audio Sound Effects">
+                        🔇 SFX: OFF
+                    </button>
+
+                    {% if current_user.is_authenticated %}
+                        <a href="/dashboard" class="btn btn-cyan btn-sm">
+                            🚀 DASHBOARD
+                        </a>
+                    {% else %}
+                        <a href="/login" class="btn btn-ghost btn-sm">
+                            LOG IN
+                        </a>
+                        <a href="/scanner" class="btn btn-primary btn-sm">
+                            🔥 LIVE SCANNER
+                        </a>
+                    {% endif %}
+
+                    <button class="mobile-menu-btn" aria-label="Toggle Navigation Menu">☰</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ================================================================= -->
+        <!-- BREAKING NONSENSE TICKER                                          -->
+        <!-- ================================================================= -->
+        <div class="breaking-ticker-bar">
+            <div class="ticker-label">
+                <span>🚨</span> BREAKING NONSENSE
+            </div>
+            <div class="ticker-viewport">
+                <div class="ticker-track">
+                    <div class="ticker-item" data-claim="NASA confirms Moon is made of low-fat mozzarella cheese">
+                        <span class="ticker-tag debunked">REFUTED</span>
+                        NASA clarifies Moon is definitely NOT made of mozzarella cheese.
+                    </div>
+                    <div class="ticker-item" data-claim="Drinking boiled garlic water cures student loan debt">
+                        <span class="ticker-tag debunked">100% CAP</span>
+                        Local man claims boiling garlic canceled his student loans; IRS disagrees.
+                    </div>
+                    <div class="ticker-item" data-claim="Putting your iPhone in microwave charges battery to 100% in 15 seconds">
+                        <span class="ticker-tag debunked">HAZARDOUS</span>
+                        Microwaving phone creates indoor lightning storm, not 100% battery. Stop it Kyle.
+                    </div>
+                    <div class="ticker-item" data-claim="Pigeons are secret government drones recharging on power lines">
+                        <span class="ticker-tag debunked">REFUTED</span>
+                        Biologists confirm pigeons are real animals and do not have USB-C charging ports.
+                    </div>
+                    <div class="ticker-item" data-claim="Ancient pyramids were built as extraterrestrial Amazon distribution hubs">
+                        <span class="ticker-tag debunked">BOLOGNA</span>
+                        Excavation uncovers limestone and zero intergalactic Prime delivery barcodes.
+                    </div>
+                    <div class="ticker-item" data-claim="Lizard people spotted struggling with self-checkout at Walmart">
+                        <span class="ticker-tag investigating">UNCONFIRMED</span>
+                        Customers report strange reptilian behavior; turns out self-checkout was just broken.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- HERO SECTION                                                      -->
+        <!-- ================================================================= -->
+        <header class="hero-section">
+            <div class="hero-pill-badge">
+                <span>⚡</span> AI-POWERED MISINFORMATION RADAR // COHERE + LIVE RAG
+            </div>
+
+            <h1 class="hero-title">
+                THE INTERNET IS 94% <span class="highlight-gold">BULLSHIT</span>.<br>
+                WE BUILT THE <span class="highlight-cyan">RADAR</span>.
+            </h1>
+
+            <p class="hero-subtitle">
+                Before you drink boiled onion water, liquidate your 401(k) for <em>ElonMarsCoin</em>,
+                or forward that 4,000-word WhatsApp essay from Uncle Bob... run it through <strong>DEBUNK.IT</strong>.
+                Instant, evidence-backed verdicts powered by live web search and ruthless AI forensic reasoning.
+            </p>
+
+            <div class="hero-cta-group">
+                <a href="/scanner" class="btn btn-primary btn-lg">
+                    <span>⚡</span> OPEN LIVE SCANNER
+                </a>
+                <a href="#meter" class="btn btn-cyan btn-lg">
+                    <span>🎯</span> TEST DRIVE BS-O-METER
+                </a>
+                <a href="#engine" class="btn btn-ghost btn-lg">
+                    <span>🧪</span> HOW IT WORKS
+                </a>
+            </div>
+
+            <div class="hero-badges-strip">
+                <div class="mini-badge">
+                    <span class="icon">🦆</span> DuckDuckGo Live Evidence
+                </div>
+                <div class="mini-badge">
+                    <span class="icon">🧠</span> Cohere Command-R Reasoning
+                </div>
+                <div class="mini-badge">
+                    <span class="icon">👵</span> WhatsApp Uncle Resistant
+                </div>
+                <div class="mini-badge">
+                    <span class="icon">🚫</span> 0% Bologna Tolerance
+                </div>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 1: INTERACTIVE BS-O-METER 3000                            -->
+        <!-- ================================================================= -->
+        <section id="meter" class="meter-section">
+            <div class="section-header">
+                <span class="section-eyebrow">INTERACTIVE LAB PREVIEW</span>
+                <h2 class="section-title">THE BULLSHIT-O-METER 3000</h2>
+                <p class="section-desc">
+                    Click a viral rumor below or paste your own unhinged internet claim to test our real-time heuristic radar.
+                </p>
+            </div>
+
+            <div class="meter-terminal">
+                <div class="terminal-top-bar">
+                    <div class="window-dots">
+                        <span class="dot-red"></span>
+                        <span class="dot-yellow"></span>
+                        <span class="dot-green"></span>
+                    </div>
+                    <div class="terminal-title">BS_DETECTOR_CONSOLE // V3.8_ONLINE</div>
+                    <div class="terminal-status-light">
+                        <span class="pulse-dot"></span> RADAR_FREQ: 94.2 GHz
+                    </div>
+                </div>
+
+                <div class="terminal-body">
+                    <!-- Gauge Column -->
+                    <div class="gauge-column">
+                        <div class="radar-sweep-effect"></div>
+
+                        <div class="gauge-svg-container">
+                            <svg class="gauge-svg" viewBox="0 0 260 140">
+                                <!-- Dial Arc Track -->
+                                <path d="M 30 130 A 100 100 0 0 1 230 130" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="18" stroke-linecap="round"/>
+                                <!-- Colored Dial Segments -->
+                                <path d="M 30 130 A 100 100 0 0 1 80 52" fill="none" stroke="var(--accent-green)" stroke-width="18" stroke-linecap="round" opacity="0.85"/>
+                                <path d="M 80 52 A 100 100 0 0 1 180 52" fill="none" stroke="var(--accent-orange)" stroke-width="18" opacity="0.85"/>
+                                <path d="M 180 52 A 100 100 0 0 1 230 130" fill="none" stroke="var(--accent-red)" stroke-width="18" stroke-linecap="round" opacity="0.85"/>
+
+                                <!-- Center Needle Anchor -->
+                                <circle cx="130" cy="130" r="10" fill="#fff" />
+                                <circle cx="130" cy="130" r="5" fill="var(--bg)" />
+
+                                <!-- Needle -->
+                                <g id="gauge-needle" class="gauge-needle" style="transform: rotate(78deg);">
+                                    <line x1="130" y1="130" x2="130" y2="40" stroke="var(--accent-gold)" stroke-width="4" stroke-linecap="round"/>
+                                    <polygon points="130,28 126,42 134,42" fill="var(--accent-gold)"/>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <div class="gauge-readout">
+                            <div id="gauge-score" class="gauge-score danger">99.9%</div>
+                            <div id="gauge-label" class="gauge-label">MAXIMUM CAP</div>
+                        </div>
+
+                        <div class="gauge-badges">
+                            <span class="meter-badge badge-cap">🚨 CAP PROBABILITY</span>
+                            <span class="meter-badge badge-source">🔍 RAG FORENSICS</span>
+                        </div>
+                    </div>
+
+                    <!-- Controls & Roast Column -->
+                    <div class="controls-column">
+                        <div>
+                            <div class="controls-heading">1. Select A Viral Internet Myth:</div>
+                            <div id="samples-container" class="samples-wrapper" style="margin-top: 10px;">
+                                <!-- Preset Chips injected via landing.js -->
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="controls-heading">2. Or Paste Any Custom Claim / URL:</div>
+                            <div class="custom-input-box">
+                                <input type="text" id="custom-claim-input" placeholder="e.g. Eating lemons at 3 AM aligns your 5G chakras..." maxlength="280">
+                                <button id="btn-test-custom" class="btn btn-cyan">
+                                    <span>🔍</span> SCAN
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Roast Diagnosis Box -->
+                        <div id="roast-card" class="roast-card danger">
+                            <div class="roast-header">
+                                <div id="roast-stamp" class="roast-stamp danger">100% PURE CAP 🚨</div>
+                                <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);">DIAGNOSIS</span>
+                            </div>
+
+                            <p id="roast-text" class="roast-text">
+                                Confirmed WhatsApp Uncle energy. Boiling garlic will cure exactly two things: your student debt will remain untouched, but everyone within a 40-meter radius will maintain social distancing due to your breath.
+                            </p>
+
+                            <div class="roast-footer-cta">
+                                <span class="roast-meta">⚡ Ready for full deep-dive with cited sources?</span>
+                                <a id="btn-scan-full" href="/scanner" class="btn btn-primary btn-sm">
+                                    <span>🚀</span> Run Full RAG Deep Dive ➔
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 2: HALL OF SHAME (CONSPIRACY DOSSIERS)                   -->
+        <!-- ================================================================= -->
+        <section id="shame" class="shame-section">
+            <div class="section-header">
+                <span class="section-eyebrow">INTERNET HALL OF SHAME</span>
+                <h2 class="section-title">THE GREATEST DEBUNKED LEGENDS</h2>
+                <p class="section-desc">
+                    Exhibit A through D of rumors that almost convinced humanity to trade critical thinking for panic.
+                </p>
+            </div>
+
+            <div class="shame-grid">
+                <!-- Dossier 1 -->
+                <div class="dossier-card">
+                    <div class="dossier-top">
+                        <span class="dossier-id">CASE #001 // HEALTH</span>
+                        <span class="rubber-stamp">BOLOGNA</span>
+                    </div>
+                    <div class="dossier-icon">🧄</div>
+                    <h3 class="dossier-title">The WhatsApp Lemon-Garlic Miracle</h3>
+                    <div class="dossier-claim">
+                        "Drinking boiled lemon rind with garlic cloves at 4:13 AM aligns chakras and eliminates Wi-Fi allergies."
+                    </div>
+                    <p class="dossier-breakdown">
+                        Zero medical peer-reviews located. The only confirmed physiological outcome is acute heartburn and alienation from housemates.
+                    </p>
+                    <div class="threat-meter">
+                        <div class="threat-meta">
+                            <span>FAMILY GROUP PANIC</span>
+                            <span>98% CHAOS</span>
+                        </div>
+                        <div class="threat-bar">
+                            <div class="threat-fill" style="width: 98%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dossier 2 -->
+                <div class="dossier-card">
+                    <div class="dossier-top">
+                        <span class="dossier-id">CASE #002 // FINANCE</span>
+                        <span class="rubber-stamp">AUDIT RISK</span>
+                    </div>
+                    <div class="dossier-icon">🐱</div>
+                    <h3 class="dossier-title">The Cat Sovereign LLC Tax Loophole</h3>
+                    <div class="dossier-claim">
+                        "The IRS hates this glitch: Register your domestic cat as a private equity hedge fund to pay 0% taxes."
+                    </div>
+                    <p class="dossier-breakdown">
+                        Federal tax statutes explicitly disallow felines from acting as managing partners. The IRS will seize your scratching post.
+                    </p>
+                    <div class="threat-meter">
+                        <div class="threat-meta">
+                            <span>INEVITABLE AUDIT RISK</span>
+                            <span>100% FATAL</span>
+                        </div>
+                        <div class="threat-bar">
+                            <div class="threat-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dossier 3 -->
+                <div class="dossier-card">
+                    <div class="dossier-top">
+                        <span class="dossier-id">CASE #003 // GEOGRAPHY</span>
+                        <span class="rubber-stamp">FACEPALM</span>
+                    </div>
+                    <div class="dossier-icon">🐧</div>
+                    <h3 class="dossier-title">The Armed Antarctic Ice Wall Army</h3>
+                    <div class="dossier-claim">
+                        "Armed military penguins guard the outer perimeter ice wall to prevent citizens from falling off Earth's edge."
+                    </div>
+                    <p class="dossier-breakdown">
+                        Emperor penguins are flightless seabirds focused exclusively on krill consumption and lack the opposable thumbs needed for small arms.
+                    </p>
+                    <div class="threat-meter">
+                        <div class="threat-meta">
+                            <span>COLD FEET FACTOR</span>
+                            <span>92% ABSURD</span>
+                        </div>
+                        <div class="threat-bar">
+                            <div class="threat-fill" style="width: 92%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dossier 4 -->
+                <div class="dossier-card">
+                    <div class="dossier-top">
+                        <span class="dossier-id">CASE #004 // TECH</span>
+                        <span class="rubber-stamp">SURVEILLANCE</span>
+                    </div>
+                    <div class="dossier-icon">🐦</div>
+                    <h3 class="dossier-title">The 5G Pigeon Drone Surveillance</h3>
+                    <div class="dossier-claim">
+                        "Birds sit on high-voltage power lines to recharge their internal lithium-polymer batteries and sync browser logs."
+                    </div>
+                    <p class="dossier-breakdown">
+                        Necropsies and veterinary records confirm feathers, bones, seeds, and zero microprocessors. They just like breadcrumbs.
+                    </p>
+                    <div class="threat-meter">
+                        <div class="threat-meta">
+                            <span>BREADCRUMB HOARDING</span>
+                            <span>86% UNHINGED</span>
+                        </div>
+                        <div class="threat-bar">
+                            <div class="threat-fill" style="width: 86%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 3: HOW IT WORKS (THE ENGINE PIPELINE)                    -->
+        <!-- ================================================================= -->
+        <section id="engine" class="engine-section">
+            <div class="section-header">
+                <span class="section-eyebrow">UNDER THE HOOD</span>
+                <h2 class="section-title">HOW THE ANTI-BS ENGINE WORKS</h2>
+                <p class="section-desc">
+                    We stacked three forensic AI layers together so you don't have to waste 4 hours arguing with strangers in comment sections.
+                </p>
+            </div>
+
+            <div class="pipeline-grid">
+                <!-- Step 1 -->
+                <div class="pipeline-card">
+                    <div class="step-number">01</div>
+                    <h3 class="pipeline-title">The Dumpster Dive</h3>
+                    <p class="pipeline-desc">
+                        Our real-time search agent crawls DuckDuckGo and verified authoritative archives to retrieve live web context, article text, and primary news coverage.
+                    </p>
+                    <div class="tech-tag">
+                        <span>🦆</span> Live RAG Web Crawler
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="pipeline-card">
+                    <div class="step-number">02</div>
+                    <h3 class="pipeline-title">The Neural Interrogation</h3>
+                    <p class="pipeline-desc">
+                        Cohere Command-R LLM cross-examines the claim against retrieved evidence, sniffing out logical fallacies, fake timestamps, clickbait triggers, and manipulative phrasing.
+                    </p>
+                    <div class="tech-tag">
+                        <span>🧠</span> Cohere LLM + ML Classifier
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="pipeline-card">
+                    <div class="step-number">03</div>
+                    <h3 class="pipeline-title">The Receipt Drop</h3>
+                    <p class="pipeline-desc">
+                        Delivers an indisputable verdict: <code>SUPPORTED</code>, <code>REFUTED</code>, or <code>INSUFFICIENT EVIDENCE</code>, backed by a confidence percentage and direct source citations.
+                    </p>
+                    <div class="tech-tag">
+                        <span>📑</span> Cited Markdown Receipts
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 4: CHAOS TELEMETRY & LIVE STATS                          -->
+        <!-- ================================================================= -->
+        <section id="telemetry" class="stats-section">
+            <div class="section-header">
+                <span class="section-eyebrow">GLOBAL TELEMETRY</span>
+                <h2 class="section-title">THE WAR ON BRAINROT IN NUMBERS</h2>
+                <p class="section-desc">
+                    Real-time aggregated statistics from DEBUNK.IT intelligence monitors.
+                </p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-num" data-target="1428910" data-suffix="+">0</div>
+                    <div class="stat-title">Claims Disintegrated</div>
+                    <div class="stat-sub">Across 90+ countries</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-num" data-target="0" data-suffix=" (Confirmed)">0</div>
+                    <div class="stat-title">Secret Lizard Overlords</div>
+                    <div class="stat-sub">We checked twice</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-num" data-target="84210" data-suffix="+">0</div>
+                    <div class="stat-title">Aunties Protected</div>
+                    <div class="stat-sub">From bogus herbal cures</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-num" data-target="1.2" data-prefix="< " data-suffix="s">&lt; 1.2s</div>
+                    <div class="stat-title">Average Time to Truth</div>
+                    <div class="stat-sub">Faster than human panic</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 5: TESTIMONIALS                                          -->
+        <!-- ================================================================= -->
+        <section id="reviews" class="testimonials-section">
+            <div class="section-header">
+                <span class="section-eyebrow">PRAISE & PARANOIA</span>
+                <h2 class="section-title">STORIES FROM THE FRONTLINE</h2>
+                <p class="section-desc">
+                    What happens when normal internet users suddenly gain the superpower of instant truth verification.
+                </p>
+            </div>
+
+            <div class="quotes-grid">
+                <!-- Review 1 -->
+                <div class="quote-card">
+                    <div class="quote-stars">★★★★★</div>
+                    <p class="quote-body">
+                        "DEBUNK.IT saved me from buying 50 pounds of colloidal copper from a guy named QuantumChad on Telegram. My retirement savings remain intact."
+                    </p>
+                    <div class="quote-author">
+                        <div class="author-avatar">👨‍💻</div>
+                        <div class="author-info">
+                            <h4>Tyler M.</h4>
+                            <p>Recovering Crypto Enthusiast</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="quote-card">
+                    <div class="quote-stars">★★★★★</div>
+                    <p class="quote-body">
+                        "I pasted my dad's daily political rant into the scanner. It gave it a 98% Cap Rating with 6 cited sources. Thanksgiving dinner was peaceful for the first time in 7 years."
+                    </p>
+                    <div class="quote-author">
+                        <div class="author-avatar">👩‍🎓</div>
+                        <div class="author-info">
+                            <h4>Maya S.</h4>
+                            <p>Family Group Chat Survivor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="quote-card">
+                    <div class="quote-stars">★★★★★</div>
+                    <p class="quote-body">
+                        "As a freelance investigative journalist, this tool cuts 3 hours of manual debunking down to 10 seconds. Finally, an AI tool that serves truth instead of hallucinations."
+                    </p>
+                    <div class="quote-author">
+                        <div class="author-avatar">📰</div>
+                        <div class="author-info">
+                            <h4>Alex K.</h4>
+                            <p>Independent Tech Journalist</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 6: FINAL CALL TO ACTION BANNER                            -->
+        <!-- ================================================================= -->
+        <section class="cta-banner-section">
+            <div class="cta-banner-card">
+                <h2>READY TO INOCULATE YOUR BRAIN AGAINST THE INTERNET?</h2>
+                <p>
+                    Stop guessing what is real. Run headlines, links, and paragraphs through the most ruthless,
+                    source-backed AI truth scanner on the web. Free guest access included.
+                </p>
+
+                <div class="cta-buttons">
+                    <a href="/scanner" class="btn btn-primary btn-lg">
+                        <span>⚡</span> LAUNCH LIVE SCANNER (FREE)
+                    </a>
+                    <a href="/register" class="btn btn-cyan btn-lg">
+                        <span>🛡️</span> CREATE ACCOUNT
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FOOTER                                                            -->
+        <!-- ================================================================= -->
+        <footer class="landing-footer">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+                    <span>DEBUNK.IT // TRUTH SYSTEM v3.8</span>
+                </div>
+
+                <ul class="footer-links">
+                    <li><a href="/scanner">Live Scanner</a></li>
+                    <li><a href="/history">Analysis History</a></li>
+                    <li><a href="/analytics">System Analytics</a></li>
+                    <li><a href="/login">Sign In</a></li>
+                    <li><a href="/register">Register</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-bottom">
+                <div>
+                    &copy; 2026 DEBUNK.IT. Built to incinerate misinformation. All rights reserved.
+                </div>
+                <div class="footer-disclaimer">
+                    Disclaimer: No pigeons or microwaves were harmed during the development of this platform.
+                    Always consult real doctors rather than WhatsApp forwards.
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/landing.js') }}"></script>
+</body>
+
+</html>

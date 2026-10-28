@@ -522,7 +522,7 @@ function switchView(viewId) {
     if (nav) nav.classList.add('active');
 
     try {
-        const targetPath = viewId === 'scanner' ? '/' : '/' + viewId;
+        const targetPath = viewId === 'scanner' ? (window.location.pathname === '/dashboard' ? '/dashboard' : '/scanner') : '/' + viewId;
         if (window.location.pathname !== targetPath) {
             window.history.pushState({ viewId }, '', targetPath);
         }

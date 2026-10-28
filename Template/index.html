@@ -20,14 +20,14 @@
 
         <nav class="sidebar">
             <div class="brand">
-                <div class="brand-lockup">
+                <a href="/" class="brand-lockup" style="text-decoration: none; color: inherit;" title="Back to Landing Page">
                     <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
 
                     <div>
                         <h1>DEBUNK.IT</h1>
                         <p>SYSTEM ADMIN v3.0</p>
                     </div>
-                </div>
+                </a>
 
                 <div class="server-status">
                     <span class="status-dot"></span>
@@ -36,6 +36,10 @@
             </div>
 
             <div class="nav-menu">
+                <a href="/" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <span class="icon">🏠</span> Landing Page
+                </a>
+
                 <button class="nav-btn active" onclick="switchView('scanner')" id="nav-scanner">
                     <span class="icon">🔍</span> Live Scanner
                 </button>
@@ -489,6 +493,17 @@
                 switchView('analytics');
             } else {
                 loadDashboardOverview();
+            }
+
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const claimParam = urlParams.get('claim') || urlParams.get('q');
+                const modeParam = urlParams.get('mode') || (claimParam && (claimParam.startsWith('http://') || claimParam.startsWith('https://')) ? 'url' : 'title');
+                if (claimParam) {
+                    fillExampleClaim(claimParam, modeParam);
+                }
+            } catch (e) {
+                console.debug('Error parsing URL params:', e);
             }
         });
 

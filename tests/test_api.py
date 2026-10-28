@@ -29,6 +29,12 @@ class TestHealthAndPages:
     def test_landing_page(self, client):
         response = client.get("/")
         assert response.status_code == 200
+        assert b"DEBUNK.IT" in response.data
+        assert b"BULLSHIT" in response.data or b"BS-O-METER" in response.data
+
+    def test_scanner_page(self, client):
+        response = client.get("/scanner")
+        assert response.status_code == 200
 
     def test_spa_routes(self, client):
         res_h = client.get("/history")

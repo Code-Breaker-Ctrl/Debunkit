@@ -281,9 +281,13 @@ logger.info("=" * 60)
 
 @app.route("/")
 def index():
-    """Serve landing/main page."""
-    if current_user.is_authenticated:
-        return redirect("/dashboard")
+    """Serve vibrant landing page."""
+    return render_template("landing.html")
+
+
+@app.route("/scanner")
+def scanner():
+    """Serve scanner tool view."""
     return render_template("index.html")
 
 
