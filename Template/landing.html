@@ -60,7 +60,7 @@
                         <span>★ Star</span>
                     </a>
 
-                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Anime-Themed Sound Effects">
+                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Sound Effects">
                         🔇 SFX: OFF
                     </button>
 
@@ -676,6 +676,9 @@
     </div>
 
     <!-- Scripts -->
+    <script>
+        window.DEBUNKIT_AUDIO_PATH = "{{ url_for('static', filename='Audio/') }}";
+    </script>
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/landing.js') }}"></script>
 </body>

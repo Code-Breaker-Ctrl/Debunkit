@@ -7,10 +7,65 @@
     'use strict';
 
     // =========================================================================
-    // 1. WEB AUDIO API SYNTHESIZER (ZERO-DEPENDENCY SOUND EFFECTS)
+    // 1. SOUND FX ENGINE (AUTHENTIC AUDIO ASSETS + SYNTHETIC FALLBACK)
     // =========================================================================
     let audioCtx = null;
     let sfxEnabled = localStorage.getItem('debunkit_sfx') === 'on';
+
+    // Base path injected from template or defaulting to /Static/Audio/
+    const AUDIO_BASE_PATH = (window.DEBUNKIT_AUDIO_PATH || '/Static/Audio/').replace(/\/+$/, '') + '/';
+
+    const AUDIO_REGISTRY = {
+        nani: { file: 'nani.mp3', vol: 0.8 },
+        wow: { file: 'anime-wow.mp3', vol: 0.75 },
+        teleport: { file: 'teleport.mp3', vol: 0.7 },
+        ultraInstinct: { file: 'ultra-instinct.mp3', vol: 0.55 },
+        hit: { file: 'hit.mp3', vol: 0.45 },
+        chime: { file: 'chime.mp3', vol: 0.6 }
+    };
+
+    const loadedAudioInstances = {};
+
+    function getAudioInstance(name) {
+        if (!AUDIO_REGISTRY[name]) return null;
+        if (!loadedAudioInstances[name]) {
+            try {
+                const aud = new Audio(AUDIO_BASE_PATH + AUDIO_REGISTRY[name].file);
+                aud.volume = AUDIO_REGISTRY[name].vol;
+                aud.preload = 'auto';
+                loadedAudioInstances[name] = aud;
+            } catch (e) {
+                return null;
+            }
+        }
+        return loadedAudioInstances[name];
+    }
+
+    function playAudioClip(name, maxDurationMs = null) {
+        if (!sfxEnabled) return false;
+        try {
+            const aud = getAudioInstance(name);
+            if (!aud) return false;
+            aud.currentTime = 0;
+            const p = aud.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(() => {});
+            }
+            if (maxDurationMs) {
+                setTimeout(() => {
+                    try {
+                        if (!aud.paused) {
+                            aud.pause();
+                            aud.currentTime = 0;
+                        }
+                    } catch (e) {}
+                }, maxDurationMs);
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
 
     function initAudio() {
         if (!audioCtx) {
@@ -21,6 +76,9 @@
         }
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
+        }
+        if (sfxEnabled) {
+            Object.keys(AUDIO_REGISTRY).forEach(name => getAudioInstance(name));
         }
     }
 
@@ -46,47 +104,76 @@
         }
     }
 
-    // Sound: Cap / Buzzer (Descending Sawtooth)
+    // Sound: Cap / Buzzer (Iconic Anime "NANI?!" voice)
     function playBuzzer() {
-        if (!sfxEnabled || !audioCtx) return;
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-
-            osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
-
-            gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.35);
-        } catch (e) {}
+        if (!sfxEnabled) return;
+        if (!playAudioClip('nani')) {
+            try {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            } catch (e) {}
+        }
     }
 
-    // Sound: Legit / Verified (Ascending Triad)
+    // Sound: Legit / Verified (Iconic Kawaii "WAAW!" sparkle)
     function playSuccessChime() {
-        if (!sfxEnabled || !audioCtx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-        notes.forEach((freq, idx) => {
-            setTimeout(() => {
-                playTone(freq, 'sine', 0.2, 0.12, 0.001);
-            }, idx * 60);
-        });
+        if (!sfxEnabled) return;
+        if (!playAudioClip('wow')) {
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => {
+                    playTone(freq, 'sine', 0.2, 0.12, 0.001);
+                }, idx * 60);
+            });
+        }
     }
 
-    // Sound: Radar Ping
+    // Sound: Instant Transmission / Teleport Whoosh
     function playRadarPing() {
-        playTone(1800, 'sine', 0.12, 0.08, 0.001);
+        if (!sfxEnabled) return;
+        if (!playAudioClip('teleport')) {
+            playTone(1800, 'sine', 0.12, 0.08, 0.001);
+        }
     }
 
-    // Sound: Button Click
+    // Sound: Crisp UI Click / Hit Marker
     function playClick() {
-        playTone(800, 'triangle', 0.04, 0.05, 0.001);
+        if (!sfxEnabled) return;
+        if (!playAudioClip('hit')) {
+            playTone(800, 'triangle', 0.04, 0.05, 0.001);
+        }
+    }
+
+    // Sound: Triumph Chime
+    function playAnimeChime() {
+        if (!sfxEnabled) return;
+        if (!playAudioClip('chime')) {
+            playTone(1046.50, 'triangle', 0.15, 0.06);
+        }
+    }
+
+    // Sound: Review / Community Victory Fanfare
+    function playAnimeVictoryFanfare() {
+        if (!sfxEnabled) return;
+        if (!playAudioClip('wow')) {
+            playSuccessChime();
+        }
+    }
+
+    // Sound: Dramatic Ultra Instinct Riff (Title Rescan easter egg)
+    function playUltraInstinct() {
+        if (!sfxEnabled) return;
+        playAudioClip('ultraInstinct', 3200);
     }
 
     // =========================================================================
@@ -578,7 +665,7 @@
                         titleEl.classList.remove('all-decoded');
                         void titleEl.offsetWidth; // Force reflow
                         titleEl.classList.add('all-decoded');
-                        playTone(1046.50, 'triangle', 0.15, 0.06);
+                        playUltraInstinct();
                     }
                 }, 50);
             });
@@ -755,7 +842,7 @@
         if (sfxBtn) {
             if (sfxEnabled) {
                 sfxBtn.classList.add('active');
-                sfxBtn.innerHTML = '✨ ANIME SFX: ON';
+                sfxBtn.innerHTML = '🔊 SFX: ON';
             } else {
                 sfxBtn.classList.remove('active');
                 sfxBtn.innerHTML = '🔇 SFX: OFF';
@@ -767,13 +854,13 @@
                 localStorage.setItem('debunkit_sfx', sfxEnabled ? 'on' : 'off');
                 if (sfxEnabled) {
                     sfxBtn.classList.add('active');
-                    sfxBtn.innerHTML = '✨ ANIME SFX: ON';
+                    sfxBtn.innerHTML = '🔊 SFX: ON';
                     playSuccessChime();
-                    showLandingToast('✨ Anime SFX activated! 🎌 Power up your sound.');
+                    showLandingToast('🔊 Sound effects enabled.');
                 } else {
                     sfxBtn.classList.remove('active');
                     sfxBtn.innerHTML = '🔇 SFX: OFF';
-                    showLandingToast('Audio effects muted.');
+                    showLandingToast('🔇 Sound effects muted.');
                 }
             });
         }
@@ -797,6 +884,7 @@
                 chip.dataset.id = preset.id;
                 chip.textContent = preset.btnText;
                 chip.addEventListener('click', () => {
+                    playClick();
                     renderMeterPreset(preset);
                 });
                 chipsContainer.appendChild(chip);
