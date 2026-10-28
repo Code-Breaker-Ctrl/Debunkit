@@ -139,17 +139,17 @@ body {
    ========================================================================== */
 .landing-nav {
     position: sticky;
-    top: 14px;
+    top: 12px;
     z-index: 100;
-    max-width: 1140px;
-    margin: 14px auto 26px;
-    width: calc(100% - 32px);
+    max-width: 1240px;
+    margin: 12px auto 24px;
+    width: calc(100% - 24px);
     background: var(--bg-surface);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     transition: all 0.3s ease;
 }
 
@@ -157,9 +157,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
-    height: 56px;
-    gap: 14px;
+    padding: 0 14px;
+    height: 54px;
+    gap: 10px;
+    width: 100%;
 }
 
 .brand-wrapper {
@@ -240,24 +241,25 @@ html[data-theme="light"] .brand-text h1 {
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     list-style: none;
     margin: 0;
     padding: 0;
     height: 100%;
+    flex-shrink: 1;
 }
 
 .nav-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     font-family: var(--font-sans);
     white-space: nowrap;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
-    padding: 0 10px;
-    height: 32px;
+    padding: 0 8px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -274,7 +276,7 @@ html[data-theme="light"] .brand-text h1 {
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
     white-space: nowrap;
     height: 100%;
@@ -283,15 +285,15 @@ html[data-theme="light"] .brand-text h1 {
 .nav-gh-star {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 34px;
-    padding: 0 11px;
+    gap: 5px;
+    height: 32px;
+    padding: 0 9px;
     border-radius: var(--radius-full);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: var(--text-muted);
     font-family: var(--font-sans);
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -545,14 +547,13 @@ html[data-theme="light"] .brand-text h1 {
     50% { transform: translateY(-4px); }
 }
 
-/* Big Crazy DEBUNK.IT Title (Non-floating, with Cyber Entrance & Roaming 3D Tilt) */
+/* Big Crazy DEBUNK.IT Title (Anchored, 1.8s Cyber Decode & Smooth Letter Ripple) */
 .hero-crazy-title-wrap {
     position: relative;
     display: inline-block;
     margin: 4px auto 14px;
-    cursor: crosshair;
+    cursor: default;
     user-select: none;
-    perspective: 700px;
 }
 
 .hero-crazy-title {
@@ -566,27 +567,48 @@ html[data-theme="light"] .brand-text h1 {
     justify-content: center;
     position: relative;
     z-index: 2;
-    transform-style: preserve-3d;
-    transition: transform 0.12s ease-out, text-shadow 0.12s ease-out;
-    animation: cyber-entrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transition: filter 0.3s ease;
 }
 
-@keyframes cyber-entrance {
-    0% {
-        opacity: 0;
-        transform: scale(0.85) translateY(24px);
-        filter: blur(12px) drop-shadow(0 0 40px #00f0ff);
-    }
-    60% {
-        opacity: 1;
-        transform: scale(1.04) translateY(-4px);
-        filter: blur(0px) drop-shadow(0 0 50px #ffd700);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-        filter: drop-shadow(0 0 28px rgba(0, 240, 255, 0.45));
-    }
+.hero-crazy-title.all-decoded {
+    animation: lock-in-flash 0.5s ease-out;
+}
+
+@keyframes lock-in-flash {
+    0% { filter: drop-shadow(0 0 50px #fff) brightness(1.6); }
+    100% { filter: drop-shadow(0 0 28px rgba(0, 240, 255, 0.45)); }
+}
+
+.char-spark {
+    display: inline-block;
+    transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.18s ease;
+    will-change: transform, filter;
+    cursor: pointer;
+}
+
+.char-spark.decoding {
+    color: var(--accent-cyan);
+    opacity: 0.85;
+    text-shadow: 0 0 15px #00f0ff;
+}
+
+.char-spark.locked {
+    animation: char-lock 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes char-lock {
+    0% { transform: scale(1.35) translateY(-6px); filter: brightness(2) drop-shadow(0 0 35px #fff); }
+    100% { transform: scale(1) translateY(0); }
+}
+
+.char-spark.hover-active {
+    transform: translateY(-10px) scale(1.12);
+    filter: drop-shadow(0 0 25px #00f0ff) brightness(1.25);
+}
+
+.char-spark.adjacent {
+    transform: translateY(-5px) scale(1.05);
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
 }
 
 .title-debunk {
@@ -1603,9 +1625,9 @@ html[data-theme="light"] .brand-text h1 {
 }
 
 /* ==========================================================================
-   MOBILE RESPONSIVENESS
+   RESPONSIVE NAVIGATION BREAKPOINT
    ========================================================================== */
-@media (max-width: 768px) {
+@media (max-width: 1040px) {
     .landing-nav {
         top: 10px;
         margin-bottom: 16px;
@@ -1614,7 +1636,28 @@ html[data-theme="light"] .brand-text h1 {
     .nav-links {
         display: none;
         position: absolute;
-        top: 100%;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        flex-direction: column;
+        padding: 16px;
+        gap: 8px;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    }
+
+    .nav-links.open {
+        display: flex;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
         left: 0;
         right: 0;
         background: var(--bg-surface);

@@ -442,85 +442,81 @@
     }
 
     // =========================================================================
-    // 8. CRAZY INTERACTIVE TITLE: CYBER ENTRANCE DECODE & 3D ROAM TILT
+    // 8. CRAZY INTERACTIVE TITLE: 1.8s VISIBLE CYBER DECODE & WAVE HOVER
     // =========================================================================
     function initCrazyTitle() {
-        const titleWrap = document.querySelector('.hero-crazy-title-wrap');
-        const titleEl = document.querySelector('.hero-crazy-title');
-        const debunkEl = document.querySelector('.title-debunk');
-        const itEl = document.querySelector('.title-it');
-        if (!titleWrap || !titleEl || !debunkEl || !itEl) return;
+        const titleEl = document.getElementById('hero-crazy-title');
+        const charElements = document.querySelectorAll('.char-spark');
+        if (!titleEl || !charElements.length) return;
 
-        // 1. Entrance Cyber Hacker Decoder
-        const glyphs = '!#@$%&*?<>{}[]/\\+=~01';
-        const originalDebunk = debunkEl.textContent.trim();
-        const originalIt = itEl.textContent.trim();
+        const glyphs = '!#@$%&*?<>01XYZ_~+=';
+        const targetWord = Array.from(charElements).map(el => el.getAttribute('data-char') || el.textContent);
+        
+        // 1. Visible 1.8-Second Cyber Decoder Entrance
+        // Each character solves rhythmically so visitors clearly see the decoding in action
+        let solvedCount = 0;
+        const totalChars = charElements.length;
+        const solveDelay = 200; // 200ms per character = ~1.6s total
 
-        let frame = 0;
-        const totalFrames = 16;
-        const decodeInterval = setInterval(() => {
-            frame++;
-            const progress = frame / totalFrames;
-
-            // Scramble DEBUNK
-            const debunkChars = originalDebunk.split('').map((char, index) => {
-                if (index / originalDebunk.length < progress) {
-                    return char;
+        // Fast glyph scramble timer (runs every 45ms)
+        const scrambleInterval = setInterval(() => {
+            charElements.forEach((el, index) => {
+                if (index < solvedCount) {
+                    el.textContent = targetWord[index];
+                    el.classList.add('locked');
+                    el.classList.remove('decoding');
+                } else {
+                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                    el.classList.add('decoding');
+                    el.classList.remove('locked');
                 }
-                return glyphs[Math.floor(Math.random() * glyphs.length)];
-            }).join('');
-            debunkEl.textContent = debunkChars;
+            });
+        }, 45);
 
-            // Scramble IT
-            const itChars = originalIt.split('').map((char, index) => {
-                if (index / originalIt.length < progress) {
-                    return char;
+        // Character lock-in timer: solves one character every 200ms
+        const solverInterval = setInterval(() => {
+            if (solvedCount < totalChars) {
+                const lockedEl = charElements[solvedCount];
+                if (lockedEl) {
+                    lockedEl.textContent = targetWord[solvedCount];
+                    lockedEl.classList.add('locked');
+                    lockedEl.classList.remove('decoding');
+                    playTone(650 + (solvedCount * 90), 'sine', 0.035, 0.04);
                 }
-                return glyphs[Math.floor(Math.random() * glyphs.length)];
-            }).join('');
-            itEl.textContent = itChars;
+                solvedCount++;
+            } else {
+                clearInterval(solverInterval);
+                clearInterval(scrambleInterval);
 
-            if (frame >= totalFrames) {
-                clearInterval(decodeInterval);
-                debunkEl.textContent = originalDebunk;
-                itEl.textContent = originalIt;
-                titleEl.classList.add('decoded');
+                // Final all-locked verification flash
+                charElements.forEach((el, index) => {
+                    el.textContent = targetWord[index];
+                    el.classList.remove('decoding');
+                    el.classList.add('locked');
+                });
+                titleEl.classList.add('all-decoded');
+                playTone(1046.50, 'triangle', 0.15, 0.06); // High C chime
             }
-        }, 28);
+        }, solveDelay);
 
-        // 2. Interactive Roaming Mouse Track & 3D Tilt
-        let sfxThrottle = null;
-        titleWrap.addEventListener('mousemove', (e) => {
-            const rect = titleWrap.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+        // 2. Interactive Letter Wave on Cursor Roam (Buttery Smooth 60FPS GPU)
+        charElements.forEach((charEl, idx) => {
+            charEl.addEventListener('mouseenter', () => {
+                charEl.classList.add('hover-active');
 
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
+                // Wave effect on adjacent neighbors
+                if (charElements[idx - 1]) charElements[idx - 1].classList.add('adjacent');
+                if (charElements[idx + 1]) charElements[idx + 1].classList.add('adjacent');
 
-            // Normalized tilt angles (-14deg to +14deg)
-            const tiltY = ((mouseX - centerX) / centerX) * 14;
-            const tiltX = -((mouseY - centerY) / centerY) * 14;
+                // Subtle audio tick
+                playTone(420 + (idx * 60), 'triangle', 0.03, 0.035);
+            });
 
-            // Dynamic text-shadow offset
-            const shadowX = (tiltY * 1.5).toFixed(1);
-            const shadowY = (-tiltX * 1.5).toFixed(1);
-
-            titleEl.style.transform = `perspective(700px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale3d(1.05, 1.05, 1.05)`;
-            titleEl.style.textShadow = `${shadowX}px ${shadowY}px 0 rgba(255, 71, 87, 0.75), ${-shadowX}px ${-shadowY}px 0 rgba(0, 240, 255, 0.75), 0 0 35px rgba(255, 215, 0, 0.65)`;
-
-            // Subtle cyber roaming blip if SFX is on
-            if (!sfxThrottle) {
-                sfxThrottle = setTimeout(() => {
-                    playTone(320 + Math.random() * 260, 'triangle', 0.035, 0.03, 0.001);
-                    sfxThrottle = null;
-                }, 85);
-            }
-        });
-
-        titleWrap.addEventListener('mouseleave', () => {
-            titleEl.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-            titleEl.style.textShadow = 'none';
+            charEl.addEventListener('mouseleave', () => {
+                charEl.classList.remove('hover-active');
+                if (charElements[idx - 1]) charElements[idx - 1].classList.remove('adjacent');
+                if (charElements[idx + 1]) charElements[idx + 1].classList.remove('adjacent');
+            });
         });
     }
 
