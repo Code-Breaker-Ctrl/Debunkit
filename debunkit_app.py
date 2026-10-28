@@ -28,6 +28,7 @@ import hashlib
 import secrets
 import hmac
 import joblib
+from urllib.parse import urlparse
 
 
 # ===== LOGGING CONFIGURATION =====
@@ -211,6 +212,16 @@ def load_user(user_id):
     except (ValueError, TypeError):
         return None
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    if request.path.startswith("/api/") or request.is_json or request.headers.get("Accept", "").find("application/json") != -1:
+        return jsonify({
+            "error": "Authentication required",
+            "authenticated": False
+        }), 401
+    return redirect("/login")
+
+
 
 # ===== ML MODEL LOAD - OPTIONAL =====
 
@@ -387,6 +398,13 @@ def dashboard():
     """User dashboard."""
     return render_template("index.html")
 
+@app.route("/history")
+@app.route("/analytics")
+def spa_views():
+    """Serve SPA view entry points."""
+    return render_template("index.html")
+
+
 
 # ===== API ROUTES =====
 
@@ -451,10 +469,17 @@ def analyze():
         if input_type == "url":
             scraped_text, error_msg = scrape_article(valid_input)
 
-            if error_msg:
-                return jsonify({"error": error_msg}), 400
-
-            text_to_analyze = scraped_text[:config.SCRAPER_MAX_CHARS]
+            if scraped_text:
+                text_to_analyze = scraped_text[:config.SCRAPER_MAX_CHARS]
+            else:
+                # Direct scrape could not extract full text, fall back to evaluating URL topic
+                parsed_url = urlparse(valid_input)
+                url_slug = re.sub(r'[-_/.]+', ' ', parsed_url.path).strip()
+                text_to_analyze = f"Article from {parsed_url.netloc}: {url_slug or valid_input}"
+                logger.info(
+                    f"URL scrape note: {error_msg}. "
+                    f"Evaluating URL source topic: {text_to_analyze}"
+                )
         else:
             text_to_analyze = valid_input
 
@@ -492,10 +517,19 @@ def analyze():
 
 
 @app.route("/api/history", methods=["GET"])
-@login_required
 def api_history():
-    """Get analysis history for current user."""
+    """Get analysis history for current user or return 401 JSON for guests."""
     try:
+        if not current_user.is_authenticated:
+            return jsonify({
+                "authenticated": False,
+                "total": 0,
+                "limit": 0,
+                "offset": 0,
+                "analyses": [],
+                "error": "Authentication required to view analysis history"
+            }), 401
+
         limit = min(int(request.args.get("limit", 50)), 100)
         offset = int(request.args.get("offset", 0))
 
@@ -506,6 +540,7 @@ def api_history():
         )
 
         return jsonify({
+            "authenticated": True,
             "total": len(history),
             "limit": limit,
             "offset": offset,
@@ -568,11 +603,12 @@ def api_search():
 
 
 @app.route("/api/stats", methods=["GET"])
-@login_required
 def api_stats():
-    """Get statistics for current user."""
+    """Get system telemetry and aggregate scanner statistics."""
     try:
-        stats = get_statistics(user=current_user)
+        scope = request.args.get("scope")
+        user = current_user if (scope == "user" and current_user.is_authenticated) else None
+        stats = get_statistics(user=user)
         return jsonify(stats), 200
 
     except Exception as e:
@@ -590,19 +626,26 @@ def health_check():
 
 
 @app.route("/api/clear-database", methods=["POST"])
-@login_required
 @limiter.limit("5 per minute")
 def clear_database():
-    """Clear all analyses for current user."""
+    """Clear analyses for current user or guest session."""
     try:
-        count = Analysis.query.filter_by(user_id=current_user.id).count()
-
-        Analysis.query.filter_by(user_id=current_user.id).delete()
-        db.session.commit()
-
-        logger.warning(
-            f"Database cleared for user {current_user.username}: {count} analyses deleted"
-        )
+        if current_user.is_authenticated:
+            count = Analysis.query.filter_by(user_id=current_user.id).count()
+            Analysis.query.filter_by(user_id=current_user.id).delete()
+            db.session.commit()
+            logger.warning(
+                f"Database cleared for user {current_user.username}: {count} analyses deleted"
+            )
+        else:
+            count = 0
+            try:
+                count = Analysis.query.filter(Analysis.user_id.is_(None)).delete()
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                count = 0
+            logger.info("Guest / session database cleared")
 
         return jsonify({
             "status": "success",

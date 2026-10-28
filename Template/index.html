@@ -166,6 +166,11 @@
                         onclick="fillExampleClaim('Rajasthan Royals dropped Vaibhav Sooryavanshi because he is poor at fielding.')">
                         Misleading sports claim
                     </button>
+
+                    <button
+                        onclick="fillExampleClaim('https://en.wikipedia.org/wiki/Artificial_intelligence', 'url')">
+                        Wikipedia AI article
+                    </button>
                 </section>
 
                 <section class="dashboard-grid">
@@ -200,7 +205,7 @@
 
                             <div id="input-url" class="input-section">
                                 <input type="url" class="input-box single-line" id="val-url"
-                                    placeholder="https://news.example.com/article...">
+                                    placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence">
                             </div>
 
                             <div id="input-text" class="input-section">
@@ -477,7 +482,25 @@
                 showGuestMode();
             }
 
-            loadDashboardOverview();
+            const initialPath = window.location.pathname.toLowerCase();
+            if (initialPath === '/history' || window.location.hash === '#history') {
+                switchView('history');
+            } else if (initialPath === '/analytics' || window.location.hash === '#analytics') {
+                switchView('analytics');
+            } else {
+                loadDashboardOverview();
+            }
+        });
+
+        window.addEventListener('popstate', (e) => {
+            const p = window.location.pathname.toLowerCase();
+            if (p === '/history' || window.location.hash === '#history') {
+                switchView('history');
+            } else if (p === '/analytics' || window.location.hash === '#analytics') {
+                switchView('analytics');
+            } else {
+                switchView('scanner');
+            }
         });
 
         function showGuestMode() {

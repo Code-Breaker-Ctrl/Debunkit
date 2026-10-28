@@ -30,6 +30,12 @@ class TestHealthAndPages:
         response = client.get("/")
         assert response.status_code == 200
 
+    def test_spa_routes(self, client):
+        res_h = client.get("/history")
+        assert res_h.status_code == 200
+        res_a = client.get("/analytics")
+        assert res_a.status_code == 200
+
 
 class TestAnalyzeValidation:
     def test_analyze_empty_body(self, client):
@@ -88,3 +94,72 @@ class TestAuthEndpoints:
         res = client.post("/register", json=weak_payload)
         assert res.status_code == 400
         assert "Password must contain" in res.get_json()["error"]
+
+
+class TestAnalyticsEndpoints:
+    def test_guest_can_access_api_stats_as_json(self, client):
+        response = client.get("/api/stats")
+        assert response.status_code == 200
+        assert response.is_json
+        data = response.get_json()
+        assert "total_analyses" in data
+        assert "verdict_breakdown" in data
+        assert "mode_breakdown" in data
+        assert "average_confidence" in data
+
+
+class TestHistoryEndpoints:
+    def test_guest_history_returns_401_json_not_redirect(self, client):
+        response = client.get("/api/history")
+        assert response.status_code == 401
+        assert response.is_json
+        data = response.get_json()
+        assert data.get("authenticated") is False
+
+    def test_clear_database_returns_json_confirmation(self, client):
+        response = client.post("/api/clear-database", json={})
+        assert response.status_code == 200
+        assert response.is_json
+        data = response.get_json()
+        assert data.get("status") == "success"
+        assert "Database cleared" in data.get("message")
+        assert "deleted" in data
+
+    def test_logged_in_user_history_flow(self, client):
+        # Register and log in
+        reg_payload = {
+            "username": "histuser",
+            "email": "hist@example.com",
+            "password": "StrongPassword123!"
+        }
+        client.post("/register", json=reg_payload)
+        client.post("/login", json={"email": "hist@example.com", "password": "StrongPassword123!"})
+
+        # Fetch history
+        res = client.get("/api/history")
+        assert res.status_code == 200
+        assert res.is_json
+        data = res.get_json()
+        assert data.get("authenticated") is True
+        assert "analyses" in data
+
+
+class TestUrlAnalysis:
+    def test_analyze_url_claim_returns_source_based_report(self, client):
+        # Even with a non-existent URL or 404 target, URL analysis returns a full report
+        payload = {
+            "text": "https://example.com/article",
+            "type": "url"
+        }
+        response = client.post("/analyze", json=payload)
+        assert response.status_code == 200
+        assert response.is_json
+        data = response.get_json()
+        assert "verdict" in data
+        assert "confidence" in data
+        assert "fact_check" in data
+        assert "red_flags" in data
+        assert "sources" in data
+        assert isinstance(data["confidence"], (int, float))
+        assert len(data["sources"]) > 0
+        assert any("example.com" in s.get("url", "") or "Submitted" in s.get("title", "") for s in data["sources"])

@@ -2,6 +2,7 @@ import re
 import time
 import logging
 import threading
+from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
@@ -168,17 +169,41 @@ def get_live_context(query):
         return "Live web context unavailable due to search error.", []
 
 
+def get_article_context_from_search(url):
+    """
+    Fallback retrieval: search web for article title/context if direct scrape fails.
+    """
+    try:
+        parsed = urlparse(url)
+        slug = re.sub(r'[-_/.]+', ' ', parsed.path).strip()
+        search_terms = f"{parsed.netloc} {slug}".strip()
+        if not search_terms or len(search_terms) < 5:
+            search_terms = url
+
+        logger.info(f"Fallback search context retrieval for query: {search_terms}")
+        with DDGS() as ddgs:
+            results = list(ddgs.text(search_terms, max_results=3))
+            if not results:
+                results = list(ddgs.text(url, max_results=3))
+
+        if results:
+            snippets = []
+            for r in results:
+                title = r.get("title", "")
+                body = r.get("body", "")
+                if title or body:
+                    snippets.append(f"{title}. {body}")
+            combined = " ".join(snippets)
+            return combined, results
+    except Exception as e:
+        logger.warning(f"Fallback search context failed for {url}: {e}")
+    return None, []
+
+
 def scrape_article(url):
     """
-    Scrape article content from a URL.
-    
-    Args:
-        url: URL to scrape
-    
-    Returns:
-        tuple: (article_text: str or None, error_message: str or None)
-            Returns (text, None) on success
-            Returns (None, error_msg) on failure
+    Scrape article content from a URL with robust headers, trailing-slash retries,
+    and search-based context fallback.
     """
     logger.info(f"Scraper: Fetching URL - {url[:50]}...")
 
@@ -188,18 +213,21 @@ def scrape_article(url):
         error_msg = f"Blocked unsafe URL: {str(e)}"
         logger.warning(error_msg)
         return None, error_msg
-    
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/124.0.0.0 Safari/537.36'
+        ),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate',
+        'Upgrade-Insecure-Requests': '1',
+    }
+
+    response = None
     try:
-        # HEADERS: Mimic browser to avoid blocking
-        headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/120.0.0.0 Safari/537.36'
-            )
-        }
-        
-        # FETCH: Request with timeout
         logger.debug(f"Fetching {url} with {config.SCRAPER_TIMEOUT}s timeout")
         response = requests.get(
             url,
@@ -214,58 +242,56 @@ def scrape_article(url):
             error_msg = f"Blocked unsafe redirect target: {str(e)}"
             logger.warning(f"{error_msg} | final_url={response.url}")
             return None, error_msg
-        
-        # Validate response
-        if response.status_code != 200:
-            error_msg = f"Failed to fetch URL. HTTP {response.status_code}"
-            logger.warning(error_msg)
-            return None, error_msg
-        
-        # PARSE: Extract text from HTML
-        logger.debug("Parsing HTML content...")
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-        
-        # Extract paragraphs (main content)
-        paragraphs = soup.find_all('p')
-        
-        if not paragraphs:
-            # Fallback: try to get any text
-            logger.debug("No <p> tags found, extracting all text")
-            article_text = soup.get_text()
-        else:
-            article_text = " ".join([p.get_text() for p in paragraphs])
-        
-        # NORMALIZE: Clean whitespace
-        article_text = re.sub(r'\s+', ' ', article_text).strip()
-        
-        # VALIDATE: Check minimum content length
-        word_count = len(article_text.split())
-        if word_count < config.SCRAPER_MIN_WORDS:
-            error_msg = (
-                f"Could not extract enough text from this URL. "
-                f"Found {word_count} words, need {config.SCRAPER_MIN_WORDS}."
-            )
-            logger.warning(error_msg)
-            return None, error_msg
-        
-        logger.info(f"Scraper: Successfully extracted {len(article_text)} characters ({word_count} words)")
-        return article_text, None
-    
-    except requests.exceptions.Timeout:
-        error_msg = f"Request timed out (>{config.SCRAPER_TIMEOUT}s)"
-        logger.error(error_msg)
-        return None, error_msg
-    
-    except requests.exceptions.ConnectionError as e:
-        error_msg = f"Connection error: {str(e)[:50]}"
-        logger.error(error_msg)
-        return None, error_msg
-    
-    except Exception as e:
-        error_msg = f"Scraper error: {str(e)[:100]}"
-        logger.error(f"Unexpected error while scraping {url}: {e}")
-        return None, error_msg
+
+        # If 404, try toggling trailing slash
+        if response.status_code == 404:
+            alt_url = url[:-1] if url.endswith('/') else url + '/'
+            try:
+                alt_resp = requests.get(
+                    alt_url,
+                    headers=headers,
+                    timeout=config.SCRAPER_TIMEOUT,
+                    allow_redirects=True
+                )
+                if alt_resp.status_code == 200:
+                    response = alt_resp
+            except Exception:
+                pass
+
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, Exception) as fetch_err:
+        logger.warning(f"Initial fetch failed for {url}: {fetch_err}")
+
+    # If direct fetch succeeded (200), extract text from HTML
+    article_text = None
+    if response is not None and response.status_code == 200:
+        try:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            for script in soup(["script", "style", "nav", "footer"]):
+                script.decompose()
+
+            paragraphs = soup.find_all('p')
+            if not paragraphs:
+                article_text = soup.get_text()
+            else:
+                article_text = " ".join([p.get_text() for p in paragraphs])
+
+            article_text = re.sub(r'\s+', ' ', article_text).strip()
+            word_count = len(article_text.split())
+
+            if word_count >= config.SCRAPER_MIN_WORDS:
+                logger.info(f"Scraper: Successfully extracted {len(article_text)} characters ({word_count} words)")
+                return article_text, None
+            else:
+                logger.info(f"Scraped text short ({word_count} words). Attempting search fallback.")
+        except Exception as parse_err:
+            logger.warning(f"Error parsing HTML: {parse_err}")
+
+    # Fallback: Retrieve article context from search engine
+    fallback_text, _ = get_article_context_from_search(url)
+    if fallback_text and len(fallback_text.split()) >= config.SCRAPER_MIN_WORDS:
+        logger.info(f"Scraper: Retrieved {len(fallback_text.split())} words from search context fallback")
+        return fallback_text, None
+
+    status_info = f" HTTP {response.status_code}" if response is not None else ""
+    error_msg = f"Failed to fetch URL.{status_info}"
+    return None, error_msg

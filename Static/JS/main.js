@@ -325,10 +325,13 @@ function focusScannerMode(mode) {
     }
 }
 
-function fillExampleClaim(text) {
-    focusScannerMode('title');
+function fillExampleClaim(text, mode = 'title') {
+    if (text.startsWith('http://') || text.startsWith('https://')) {
+        mode = 'url';
+    }
+    focusScannerMode(mode);
 
-    const input = document.getElementById('val-title');
+    const input = document.getElementById('val-' + mode);
 
     if (input) {
         input.value = text;
@@ -376,13 +379,20 @@ async function loadDashboardOverview() {
 
 async function loadDashboardStats() {
     try {
-        const response = await fetch('/api/stats');
+        const response = await fetch('/api/stats', {
+            headers: { 'Accept': 'application/json' }
+        });
 
         if (!response.ok) {
             setDashboardMetric('dash-total-scans', '--');
             setDashboardMetric('dash-supported-count', '--');
             setDashboardMetric('dash-refuted-count', '--');
             return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Non-JSON stats response');
         }
 
         const data = await response.json();
@@ -407,9 +417,17 @@ async function loadRecentAnalyses() {
     if (!container) return;
 
     try {
-        const response = await fetch('/api/history?limit=3');
+        const response = await fetch('/api/history?limit=3', {
+            headers: { 'Accept': 'application/json' }
+        });
 
         if (!response.ok) {
+            setStatusMessage(container, 'Login to see recent scans.', 'var(--muted)');
+            return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
             setStatusMessage(container, 'Login to see recent scans.', 'var(--muted)');
             return;
         }
@@ -502,6 +520,15 @@ function switchView(viewId) {
 
     if (view) view.classList.add('active');
     if (nav) nav.classList.add('active');
+
+    try {
+        const targetPath = viewId === 'scanner' ? '/' : '/' + viewId;
+        if (window.location.pathname !== targetPath) {
+            window.history.pushState({ viewId }, '', targetPath);
+        }
+    } catch (e) {
+        // Safe fallback in sandboxed environments
+    }
 
     if (viewId === 'history') {
         loadAnalysisHistory();
@@ -658,7 +685,7 @@ async function startScan(retryCount = 0) {
         try {
             new URL(payload.text);
         } catch {
-            displayError('Please enter a valid URL (e.g., https://example.com/article)');
+            displayError('Please enter a valid URL (e.g., https://en.wikipedia.org/wiki/Artificial_intelligence)');
             return;
         }
     }
@@ -786,13 +813,97 @@ async function startScan(retryCount = 0) {
     }
 }
 
+function renderSignInPrompt(container) {
+    clearElement(container);
+
+    const card = document.createElement('div');
+    card.className = 'history-signin-card';
+    card.style.padding = '36px 24px';
+    card.style.textAlign = 'center';
+    card.style.background = 'rgba(255, 255, 255, 0.02)';
+    card.style.border = '1px dashed var(--border)';
+    card.style.borderRadius = '8px';
+    card.style.margin = '20px 0';
+
+    const icon = document.createElement('div');
+    icon.textContent = '🔒';
+    icon.style.fontSize = '36px';
+    icon.style.marginBottom = '12px';
+    card.appendChild(icon);
+
+    const title = document.createElement('h3');
+    title.textContent = 'Sign In to View Analysis History';
+    title.style.margin = '0 0 10px 0';
+    title.style.color = 'var(--accent)';
+    card.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.textContent = 'Analysis history is saved to registered accounts. Sign in or create an account to view, filter, and export past verification reports.';
+    desc.style.color = 'var(--text-muted, #aaa)';
+    desc.style.maxWidth = '500px';
+    desc.style.margin = '0 auto 20px auto';
+    desc.style.lineHeight = '1.6';
+    card.appendChild(desc);
+
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.justifyContent = 'center';
+    actions.style.gap = '12px';
+    actions.style.flexWrap = 'wrap';
+
+    const loginBtn = document.createElement('a');
+    loginBtn.href = '/login';
+    loginBtn.className = 'btn';
+    loginBtn.textContent = 'LOG IN';
+    loginBtn.style.textDecoration = 'none';
+    loginBtn.style.padding = '10px 24px';
+    loginBtn.style.display = 'inline-block';
+    actions.appendChild(loginBtn);
+
+    const registerBtn = document.createElement('a');
+    registerBtn.href = '/register';
+    registerBtn.className = 'btn';
+    registerBtn.textContent = 'SIGN UP';
+    registerBtn.style.background = 'var(--border)';
+    registerBtn.style.color = 'var(--text)';
+    registerBtn.style.textDecoration = 'none';
+    registerBtn.style.padding = '10px 24px';
+    registerBtn.style.display = 'inline-block';
+    actions.appendChild(registerBtn);
+
+    card.appendChild(actions);
+    container.appendChild(card);
+
+    const countLabel = document.getElementById('history-count-label');
+    if (countLabel) {
+        countLabel.textContent = 'Sign-in required';
+    }
+}
+
 async function loadAnalysisHistory() {
     const contentDiv = document.getElementById('history-content');
     setStatusMessage(contentDiv, 'Loading analysis history.');
 
     try {
-        const response = await fetch('/api/history?limit=100');
+        const response = await fetch('/api/history?limit=100', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
         const data = await response.json();
+
+        if (response.status === 401 || (data && data.authenticated === false)) {
+            cachedHistoryAnalyses = [];
+            updateHistoryCountLabel(0, 0);
+            renderSignInPrompt(contentDiv);
+            return;
+        }
 
         if (!response.ok) {
             setStatusMessage(
@@ -1020,7 +1131,15 @@ async function loadSystemAnalytics() {
     setStatusMessage(contentDiv, 'Loading system analytics.');
 
     try {
-        const response = await fetch('/api/stats');
+        const response = await fetch('/api/stats', {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -1032,22 +1151,31 @@ async function loadSystemAnalytics() {
             return;
         }
 
-        if (!data.total_analyses || data.total_analyses === 0) {
-            setStatusMessage(contentDiv, 'No analyses yet. Run some analyses to see statistics!');
-            return;
-        }
-
         clearElement(contentDiv);
 
-        const normalizedVerdictBreakdown = mergeBreakdown(
-            data.verdict_breakdown || {},
-            normalizeVerdict
-        );
+        const defaultVerdicts = {
+            'SUPPORTED': 0,
+            'REFUTED': 0,
+            'MISLEADING': 0,
+            'LOW CREDIBILITY': 0,
+            'INSUFFICIENT EVIDENCE': 0
+        };
 
-        const normalizedModeBreakdown = mergeBreakdown(
-            data.mode_breakdown || {},
-            normalizeModeLabel
-        );
+        const normalizedVerdictBreakdown = {
+            ...defaultVerdicts,
+            ...mergeBreakdown(data.verdict_breakdown || {}, normalizeVerdict)
+        };
+
+        const defaultModes = {
+            'AI Analysis': 0,
+            'Local NLP': 0,
+            'ML Model': 0
+        };
+
+        const normalizedModeBreakdown = {
+            ...defaultModes,
+            ...mergeBreakdown(data.mode_breakdown || {}, normalizeModeLabel)
+        };
 
         const grid = document.createElement('div');
         grid.style.display = 'grid';
@@ -1069,13 +1197,13 @@ async function loadSystemAnalytics() {
         const totalP = document.createElement('p');
         totalP.style.margin = '5px 0';
         totalP.style.color = 'var(--text)';
-        totalP.textContent = `Total Analyses: ${data.total_analyses}`;
+        totalP.textContent = `Total Analyses: ${data.total_analyses || 0}`;
         summaryCard.appendChild(totalP);
 
         const avgP = document.createElement('p');
         avgP.style.margin = '5px 0';
         avgP.style.color = 'var(--text)';
-        avgP.textContent = `Average Confidence: ${data.average_confidence}%`;
+        avgP.textContent = `Average Confidence: ${data.average_confidence || 0}%`;
         summaryCard.appendChild(avgP);
 
         grid.appendChild(summaryCard);
@@ -1100,30 +1228,34 @@ async function loadSystemAnalytics() {
             'INSUFFICIENT EVIDENCE'
         ];
 
-        Object.entries(normalizedVerdictBreakdown)
-            .sort(([a], [b]) => {
-                const indexA = verdictOrder.indexOf(a);
-                const indexB = verdictOrder.indexOf(b);
+        verdictOrder.forEach(verdict => {
+            const count = normalizedVerdictBreakdown[verdict] || 0;
+            const p = document.createElement('p');
+            p.style.margin = '5px 0';
+            p.style.color = getVerdictColor(verdict);
 
-                if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-                if (indexA === -1) return 1;
-                if (indexB === -1) return -1;
+            const strong = document.createElement('strong');
+            strong.textContent = verdict;
 
-                return indexA - indexB;
-            })
-            .forEach(([verdict, count]) => {
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(`: ${count}`));
+
+            verdictCard.appendChild(p);
+        });
+
+        Object.keys(normalizedVerdictBreakdown).forEach(verdict => {
+            if (!verdictOrder.includes(verdict)) {
+                const count = normalizedVerdictBreakdown[verdict];
                 const p = document.createElement('p');
                 p.style.margin = '5px 0';
                 p.style.color = getVerdictColor(verdict);
-
                 const strong = document.createElement('strong');
                 strong.textContent = verdict;
-
                 p.appendChild(strong);
                 p.appendChild(document.createTextNode(`: ${count}`));
-
                 verdictCard.appendChild(p);
-            });
+            }
+        });
 
         grid.appendChild(verdictCard);
 
@@ -1262,20 +1394,32 @@ async function clearAllAnalyses() {
         const response = await fetch('/api/clear-database', {
             method: 'POST',
             headers: csrfHeaders({
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             })
         });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
 
         const data = await response.json();
 
         if (response.ok) {
-            showNotification(`Database cleared! ${data.deleted} analyses deleted.`, 'success');
+            showNotification(`Database cleared! ${data.deleted || 0} analyses deleted.`, 'success');
+            cachedHistoryAnalyses = [];
+            updateHistoryCountLabel(0, 0);
+            const contentDiv = document.getElementById('history-content');
+            if (contentDiv) {
+                setStatusMessage(contentDiv, 'No analyses yet. Start by analyzing some content!');
+            }
             setTimeout(() => {
                 loadAnalysisHistory();
                 loadDashboardOverview();
-            }, 1500);
+            }, 1000);
         } else {
-            showNotification(`Error: ${data.error}`, 'error');
+            showNotification(`Error: ${data.error || 'Failed to clear database'}`, 'error');
         }
     } catch (error) {
         console.error('[Error]', error);
